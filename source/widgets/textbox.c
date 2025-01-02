@@ -337,9 +337,26 @@ static void __textbox_update_pango_text(textbox *tb) {
   tb->show_placeholder = FALSE;
   if ((tb->flags & TB_PASSWORD) == TB_PASSWORD) {
     size_t l = g_utf8_strlen(tb->text, -1);
-    char string[l + 1];
-    memset(string, '*', l);
-    string[l] = '\0';
+    
+    // const char *dot = "●";
+    // size_t dot_len = strlen(dot);
+    // size_t total_len = l * dot_len;
+    // unsigned char string[total_len + 1];
+    // unsigned char *ptr = string;
+    // for (size_t i = 0; i < l; i++) {
+    //   memcpy(ptr, dot, dot_len);
+    //   ptr += dot_len;
+    // }
+
+    // DEFAULT SET "●"
+    unsigned char string[l * 3 + 1];  // "●" is 3 bytes in UTF-8
+    unsigned char *ptr = string;
+    while (l--) { // UTF-8 bytes for Unicode Character “●” (U+25CF)
+        *ptr++ = (char)0xE2;
+        *ptr++ = (char)0x97;
+        *ptr++ = (char)0x8F;
+    }
+    *ptr = '\0';
     pango_layout_set_text(tb->layout, string, l);
   } else if (tb->flags & TB_MARKUP || tb->tbft & MARKUP) {
     pango_layout_set_markup(tb->layout, tb->text, -1);
