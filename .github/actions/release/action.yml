@@ -8,14 +8,14 @@ runs:
       run: meson dist -C builddir --include-subprojects --formats xztar,gztar --no-tests
       shell: bash
     - id: upload
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: tarballs
         path: |
           builddir/meson-dist/*.tar.xz
           builddir/meson-dist/*.tar.gz
     - id: create_release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         draft: true
         files: |
