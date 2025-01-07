@@ -251,7 +251,7 @@ void widget_draw(widget *wid, cairo_t *d) {
 
     if (left != 0 || top != 0 || right != 0 || bottom != 0) {
       cairo_save(d);
-      cairo_set_operator(d, CAIRO_OPERATOR_ADD);
+      //      cairo_set_operator(d, CAIRO_OPERATOR_ADD);
       cairo_translate(d, wid->x, wid->y);
       cairo_new_path(d);
       rofi_theme_get_color(wid, "border-color", d);
