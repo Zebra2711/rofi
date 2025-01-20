@@ -10,7 +10,7 @@ runs:
     - id: upload
       uses: actions/upload-artifact@v4
       with:
-        name: tarballs
+        name: release_tarballs-${{ github.ref_name }}
         path: |
           builddir/meson-dist/*.tar.xz
           builddir/meson-dist/*.tar.gz
