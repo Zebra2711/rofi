@@ -1,9 +1,11 @@
-*gitignore export-ignore
+.build.yml export-ignore
 .gitattributes export-ignore
-.gitmodules export-ignore
-.gitlab-ci.yml export-ignore
-.travis.yml export-ignore
+.gitignore export-ignore
+.mailmap export-ignore
 .github export-ignore
+.gitlab-ci.yml export-ignore
+.gitmodules export-ignore
+.travis.yml export-ignore
 releasenotes export-ignore
 doc/*.png export-ignore
 doc/help-output.txt export-ignore
@@ -12,5 +14,5 @@ doc/Notes export-ignore
 doc/old-theme-convert-output.rasi export-ignore
 doc/test_xr.txt export-ignore
 doc/create_screenshot.sh export-ignore
-doc/README.md export-ignore
+mkdocs export-ignore
 script/*.jpg export-ignore

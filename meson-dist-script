@@ -14,3 +14,10 @@ rm -rf build
 
 # configure script
 autoreconf -i
+rm -rf autom4te.cache
+
+# remove unwanted files in submodules
+# (.gitattributes only applies to the root repo)
+rm -f subprojects/*/.mailmap
+rm -f subprojects/*/.gitignore
+rm -f subprojects/*/.travis.yml
