@@ -182,6 +182,7 @@ if FOUND_PANDOC
 generate-manpage: doc/rofi.1\
 	doc/rofi-sensible-terminal.1\
 	doc/rofi-theme-selector.1\
+	doc/rofi-actions.5\
 	doc/rofi-debugging.5\
 	doc/rofi-dmenu.5\
 	doc/rofi-keys.5\

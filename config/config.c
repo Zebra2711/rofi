@@ -49,6 +49,18 @@ Settings config = {
     /** Custom command to generate preview icons */
     .preview_cmd = NULL,
 
+    /** Custom command to call when menu selection changes */
+    .on_selection_changed = NULL,
+    /** Custom command to call when menu mode changes */
+    .on_mode_changed = NULL,
+    /** Custom command to call when menu entry is accepted */
+    .on_entry_accepted = NULL,
+    /** Custom command to call when menu is canceled */
+    .on_menu_canceled = NULL,
+    /** Custom command to call when menu finds errors */
+    .on_menu_error = NULL,
+    /** Custom command to call when menu screenshot is taken */
+    .on_screenshot_taken = NULL,
     /** Terminal to use. (for ssh and open in terminal) */
     .terminal_emulator = "rofi-sensible-terminal",
     .ssh_client = "ssh",
@@ -92,6 +104,8 @@ Settings config = {
     .sorting_method = "normal",
     /** Case sensitivity of the search */
     .case_sensitive = FALSE,
+    /** Case smart of the search */
+    .case_smart = FALSE,
     /** Cycle through in the element list */
     .cycle = TRUE,
     /** Height of an element in #chars */

@@ -101,6 +101,8 @@ struct RofiViewState {
   int skip_absorb;
   /** The selected line (in the unfiltered list) */
   unsigned int selected_line;
+  /** The previously selected line (in the unfiltered list) */
+  unsigned int previous_line;
   /** The return state of the view */
   MenuReturn retv;
   /** Monitor #workarea the view is displayed on */
@@ -159,12 +161,13 @@ struct RofiViewState {
 
   /** Regexs used for matching */
   rofi_int_matcher **tokens;
+  /** For case-sensitivity */
+  gboolean case_sensitive;
 };
 /** @} */
 
 typedef struct _view_proxy {
   void (*update)(struct RofiViewState *state, gboolean qr);
-  void (*maybe_update)(struct RofiViewState *state);
   void (*temp_configure_notify)(struct RofiViewState *state,
                                 xcb_configure_notify_event_t *xce);
   void (*temp_click_to_exit)(struct RofiViewState *state, xcb_window_t target);
@@ -222,6 +225,8 @@ struct _rofi_view_cache_state {
   gboolean delayed_mode;
   /** timeout handling */
   guint user_timeout;
+  /** timeout overlay */
+  guint overlay_timeout;
   /** Entry box */
   gboolean entry_history_enable;
   /** Array with history entriy input. */

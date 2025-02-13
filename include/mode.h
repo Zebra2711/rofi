@@ -29,7 +29,12 @@
 #define ROFI_MODE_H
 #include "rofi-types.h"
 #include <cairo.h>
+#include <gmodule.h>
 G_BEGIN_DECLS
+
+/** ABI version to check if loaded plugin is compatible. */
+#define ABI_VERSION 7u
+
 /**
  * @defgroup MODE Mode
  *
@@ -277,6 +282,28 @@ ModeMode mode_completer_result(Mode *sw, int menu_retv, char **input,
  * @returns TRUE if mode can be used as completer.
  */
 gboolean mode_is_completer(const Mode *sw);
+
+/**
+ * @param mode The mode to query
+ *
+ * @returns the modes ABI version.
+ */
+int mode_get_abi_version(Mode *const mode);
+
+/**
+ * @param mode The mode to query
+ * @param mod The GModule used to load the mode
+ *
+ * Set GModule used to load this plugin, this is used to
+ * unload it on shutdown.
+ */
+void mode_plugin_set_module(Mode *mode, GModule *mod);
+/**
+ * @param mode The mode to query
+ *
+ * @returns the GModule used to load this plugin. NULL if not a plugin.
+ */
+GModule *mode_plugin_get_module(Mode *mode);
 /**@}*/
 G_END_DECLS
 #endif

@@ -71,10 +71,6 @@
 
 #include "timings.h"
 
-// Plugin abi version.
-// TODO: move this check to mode.c
-#include "mode-private.h"
-
 /** Location of pidfile for this instance. */
 char *pidfile = NULL;
 /** Location of Cache directory. */
@@ -202,7 +198,7 @@ static void run_mode_index(ModeMode mode) {
   for (unsigned int i = 0; i < num_modes; i++) {
     if (!mode_init(modes[i])) {
       GString *str = g_string_new("Failed to initialize the mode: ");
-      g_string_append(str, modes[i]->name);
+      g_string_append(str, mode_get_name(modes[i]));
       g_string_append(str, "\n");
 
       rofi_view_error_dialog(str->str, ERROR_MSG_MARKUP);
@@ -303,7 +299,7 @@ static void print_list_of_modes(int is_term) {
     }
     printf("        • %s%s%s%s\n", active ? "+" : "",
            is_term ? (active ? color_green : color_red) : "",
-           available_modes[i]->name, is_term ? color_reset : "");
+           mode_get_name(available_modes[i]), is_term ? color_reset : "");
   }
 }
 static void print_main_application_options(int is_term) {
@@ -475,7 +471,7 @@ static void help_print_mode_not_found(const char *mode) {
       }
     }
     g_string_append_printf(str, "        * %s%s\n", active ? "+" : "",
-                           available_modes[i]->name);
+                           mode_get_name(available_modes[i]));
   }
   rofi_add_error_message(str);
 }
@@ -489,7 +485,7 @@ static void help_print_no_arguments(void) {
   g_string_append(emesg, "The following modes are enabled:\n");
   for (unsigned int j = 0; j < num_modes; j++) {
     g_string_append_printf(emesg, "    • <span color=\"green\">%s</span>\n",
-                           modes[j]->name);
+                           mode_get_name(modes[j]));
   }
   g_string_append(emesg, "\nThe following modes can be enabled:\n");
   for (unsigned int i = 0; i < num_available_modes; i++) {
@@ -502,7 +498,7 @@ static void help_print_no_arguments(void) {
     }
     if (!active) {
       g_string_append_printf(emesg, "    • <span color=\"red\">%s</span>\n",
-                             available_modes[i]->name);
+                             mode_get_name(available_modes[i]));
     }
   }
   g_string_append(emesg, "\nTo activate a mode, add it to the list in "
@@ -565,7 +561,7 @@ static void cleanup(void) {
 
 Mode *rofi_collect_modes_search(const char *name) {
   for (unsigned int i = 0; i < num_available_modes; i++) {
-    if (g_strcmp0(name, available_modes[i]->name) == 0) {
+    if (g_strcmp0(name, mode_get_name(available_modes[i])) == 0) {
       return available_modes[i];
     }
   }
@@ -577,7 +573,7 @@ Mode *rofi_collect_modes_search(const char *name) {
  * @returns TRUE when success.
  */
 static gboolean rofi_collectmodes_add(Mode *mode) {
-  Mode *m = rofi_collect_modes_search(mode->name);
+  Mode *m = rofi_collect_modes_search(mode_get_name(mode));
   if (m == NULL) {
     available_modes =
         g_realloc(available_modes, sizeof(Mode *) * (num_available_modes + 1));
@@ -605,13 +601,13 @@ static void rofi_collectmodes_dir(const char *base_dir) {
       if (mod) {
         Mode *m = NULL;
         if (g_module_symbol(mod, "mode", (gpointer *)&m)) {
-          if (m->abi_version != ABI_VERSION) {
+          if (mode_get_abi_version(m) != ABI_VERSION) {
             g_warning("ABI version of plugin: '%s' does not match: %08X "
                       "expecting: %08X",
-                      dn, m->abi_version, ABI_VERSION);
+                      dn, mode_get_abi_version(m), ABI_VERSION);
             g_module_close(mod);
           } else {
-            m->module = mod;
+            mode_plugin_set_module(m, mod);
             if (!rofi_collectmodes_add(m)) {
               g_module_close(mod);
             }
@@ -684,8 +680,8 @@ static void rofi_collectmodes_setup(void) {
 }
 static void rofi_collectmodes_destroy(void) {
   for (unsigned int i = 0; i < num_available_modes; i++) {
-    if (available_modes[i]->module) {
-      GModule *mod = available_modes[i]->module;
+    if (mode_plugin_get_module(available_modes[i])) {
+      GModule *mod = mode_plugin_get_module(available_modes[i]);
       available_modes[i] = NULL;
       g_module_close(mod);
     }
@@ -1107,7 +1103,9 @@ int main(int argc, char *argv[]) {
       extern const char *rasi_theme_file_extensions[];
       char *file2 =
           helper_get_theme_path(config_path, rasi_theme_file_extensions, NULL);
-      char *filename = rofi_theme_parse_prepare_file(file2);
+      GFile *gf = g_file_new_for_path(file2);
+      char *filename = g_file_get_path(gf);
+      g_object_unref(gf);
       g_free(file2);
       if (filename && g_file_test(filename, G_FILE_TEST_EXISTS)) {
         if (rofi_theme_parse_file(filename)) {

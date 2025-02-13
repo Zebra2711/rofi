@@ -2,6 +2,7 @@ man_files = [
     'rofi.1',
     'rofi-sensible-terminal.1',
     'rofi-theme-selector.1',
+    'rofi-actions.5',
     'rofi-debugging.5',
     'rofi-dmenu.5',
     'rofi-keys.5',

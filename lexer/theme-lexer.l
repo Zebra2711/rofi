@@ -51,6 +51,8 @@
 int last_state = 0;
 extern int rofi_is_in_dmenu_mode;
 
+gboolean import_optional = FALSE;
+
 const char *rasi_theme_file_extensions[] = {".rasi", ".rasinc", NULL};
 /**
  * Type of Object to parse.
@@ -289,6 +291,7 @@ C_COMMENT_OPEN "/*"
 
 
 INCLUDE    "@import"
+OPT_INCLUDE    "?import"
 THEME "@theme"
 DEFAULT (?i:\"default\"?)
 
@@ -378,6 +381,12 @@ if ( queue == NULL ) {
      */
 <INITIAL>{INCLUDE} {
     g_queue_push_head ( queue, GINT_TO_POINTER (YY_START) );
+    import_optional = FALSE;
+    BEGIN(INCLUDE);
+}
+<INITIAL>{OPT_INCLUDE} {
+    g_queue_push_head ( queue, GINT_TO_POINTER (YY_START) );
+    import_optional = TRUE;
     BEGIN(INCLUDE);
 }
 <INITIAL>{THEME} {
@@ -437,10 +446,15 @@ if ( queue == NULL ) {
         yylloc->first_column = yylloc->last_column = 1;
         yylloc->filename = current->filename;
     } else {
-        char *str = g_markup_printf_escaped ( "Failed to open theme: <i>%s</i>\nError: <b>%s</b>",
-                filename, strerror ( errno ) );
-        rofi_add_warning_message ( g_string_new ( str ) );
-        g_free ( str );
+	if ( !import_optional ) {
+		char *str = g_markup_printf_escaped ( "Failed to open theme: <i>%s</i>\nError: <b>%s</b>",
+				filename, strerror ( errno ) );
+		rofi_add_warning_message ( g_string_new ( str ) );
+		g_free ( str );
+	} else {
+		g_warning("Trying to parse optional theme: '%s', Error: %s",
+			filename, strerror(errno));
+	}
         g_free(filename);
     }
     // Pop out of include. */
@@ -844,7 +858,7 @@ if ( queue == NULL ) {
  /**
   * Media defaults.
   */
-<MEDIA,MEDIA_CONTENT,MEDIA_ENV_VAR,MEDIA_ENV_VAR_DEFAULT,MEDIA_ENV_VAR_CONTENT>{WHITESPACE}+	; // ignore all whitespace 
+<MEDIA,MEDIA_CONTENT,MEDIA_ENV_VAR,MEDIA_ENV_VAR_DEFAULT,MEDIA_ENV_VAR_CONTENT>{WHITESPACE}+	; // ignore all whitespace
 
 <MEDIA,MEDIA_CONTENT,MEDIA_ENV_VAR,MEDIA_ENV_VAR_DEFAULT,MEDIA_ENV_VAR_CONTENT>. {
     yytext[yyleng-1] = '\0';

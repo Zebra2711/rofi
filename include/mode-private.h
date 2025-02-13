@@ -31,9 +31,6 @@
 #include <gmodule.h>
 G_BEGIN_DECLS
 
-/** ABI version to check if loaded plugin is compatible. */
-#define ABI_VERSION 7u
-
 /**
  * Indicator what type of mode this is.
  * For now it can be the classic switcher, or also implement a completer.

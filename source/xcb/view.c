@@ -310,28 +310,6 @@ static void xcb_rofi_view_update(RofiViewState *state, gboolean qr) {
   }
 }
 
-static void xcb_rofi_view_maybe_update(RofiViewState *state) {
-  if (rofi_view_get_completed(state)) {
-    // This menu is done.
-    rofi_view_finalize(state);
-    // If there a state. (for example error) reload it.
-    state = rofi_view_get_active();
-
-    // cleanup, if no more state to display.
-    if (state == NULL) {
-      // Quit main-loop.
-      rofi_quit_main_loop();
-      return;
-    }
-  }
-
-  // Update if requested.
-  if (state->refilter) {
-    rofi_view_refilter(state);
-  }
-  rofi_view_update(state, TRUE);
-  return;
-}
 
 /**
  * Calculates the window position
@@ -962,13 +940,17 @@ static void xcb_rofi_view_cleanup(void) {
     g_source_remove(XcbState.idle_timeout);
     XcbState.idle_timeout = 0;
   }
-  if (CacheState.user_timeout > 0) {
-    g_source_remove(CacheState.user_timeout);
-    CacheState.user_timeout = 0;
-  }
   if (CacheState.refilter_timeout > 0) {
     g_source_remove(CacheState.refilter_timeout);
     CacheState.refilter_timeout = 0;
+  }
+  if (CacheState.overlay_timeout) {
+    g_source_remove(CacheState.overlay_timeout);
+    CacheState.overlay_timeout = 0;
+  }
+  if (CacheState.user_timeout > 0) {
+    g_source_remove(CacheState.user_timeout);
+    CacheState.user_timeout = 0;
   }
   if (XcbState.repaint_source > 0) {
     g_source_remove(XcbState.repaint_source);
@@ -1020,7 +1002,6 @@ static void xcb_rofi_view_set_window_title(const char *title) {
 
 static view_proxy view_ = {
     .update = xcb_rofi_view_update,
-    .maybe_update = xcb_rofi_view_maybe_update,
     .temp_configure_notify = xcb_rofi_view_temp_configure_notify,
     .temp_click_to_exit = xcb_rofi_view_temp_click_to_exit,
     .frame_callback = xcb_rofi_view_frame_callback,

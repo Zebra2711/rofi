@@ -289,8 +289,8 @@ static gpointer read_input_thread(gpointer userdata) {
       if (FD_ISSET(fd, &rfds)) {
         ssize_t readbytes = 0;
         if ((nread + 1024) > len) {
-          line = g_realloc(line, (nread + 1024));
-          len = nread + 1024;
+          line = g_realloc(line, (len + 2048));
+          len = len + 2048;
         }
         readbytes = read(fd, &line[nread], 1023);
         if (readbytes > 0) {
@@ -959,7 +959,8 @@ int dmenu_mode_dialog(void) {
   char *select = NULL;
   find_arg_str("-select", &select);
   if (select != NULL) {
-    rofi_int_matcher **tokens = helper_tokenize(select, config.case_sensitive);
+    rofi_int_matcher **tokens =
+        helper_tokenize(select, parse_case_sensitivity(select));
     unsigned int i = 0;
     for (i = 0; i < cmd_list_length; i++) {
       if (helper_token_match(tokens, cmd_list[i].entry)) {
@@ -970,8 +971,9 @@ int dmenu_mode_dialog(void) {
     helper_tokenize_free(tokens);
   }
   if (find_arg("-dump") >= 0) {
-    rofi_int_matcher **tokens = helper_tokenize(
-        config.filter ? config.filter : "", config.case_sensitive);
+    char *filter = config.filter ? config.filter : "";
+    rofi_int_matcher **tokens =
+        helper_tokenize(filter, parse_case_sensitivity(filter));
     unsigned int i = 0;
     for (i = 0; i < cmd_list_length; i++) {
       if (tokens == NULL || helper_token_match(tokens, cmd_list[i].entry)) {

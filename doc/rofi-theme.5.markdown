@@ -1118,6 +1118,10 @@ The following properties are currently supported:
 - **require-input**:    boolean Listview requires user input to be unhidden.
     The list is still present and hitting accept will activate the first entry.
 
+### Overlay widget
+
+- **timeout**: The time the widget is visible when showing a temporary message.
+
 ## Listview widget
 
 The listview widget is special container widget.
@@ -1657,6 +1661,14 @@ If a filename is provided, it will try to resolve it in the following order:
 
 A name is resolved (if it has no valid extension) as a filename by appending the `.rasi` and the `.rasinc` extension.
 It will first look for files with `.rasi`, then for files with `.rasinc`.
+
+If you want to do an optional import, e.g. no error when the file does not exists, you can do:
+
+```css
+?import "myfile"
+```
+
+This still throws an error on syntax error, but won't abort parsing if file does not exists.
 
 ## Examples
 

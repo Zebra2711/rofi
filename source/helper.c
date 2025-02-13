@@ -54,6 +54,16 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+const char *const MatchingMethodStr[MM_NUM_MATCHERS] = {
+    "Normal", "Regex", "Glob", "Fuzzy", "Prefix"};
+
+static int MatchingMethodEnabled[MM_NUM_MATCHERS] = {
+    MM_NORMAL,
+    -1,
+};
+static int NUMMatchingMethodEnabled = 1;
+static int CurrentMatchingMethod = 0;
+
 /**
  * Textual description of positioning rofi.
  */
@@ -66,6 +76,23 @@ int stored_argc = 0;
 char **stored_argv = NULL;
 
 char *helper_string_replace_if_exists_v(char *string, GHashTable *h);
+
+const char *helper_get_matching_mode_str(void) {
+  return MatchingMethodStr[config.matching_method];
+}
+void helper_select_next_matching_mode(void) {
+
+  CurrentMatchingMethod++;
+  CurrentMatchingMethod %= NUMMatchingMethodEnabled;
+  config.matching_method = MatchingMethodEnabled[CurrentMatchingMethod];
+}
+void helper_select_previous_matching_mode(void) {
+  CurrentMatchingMethod--;
+  if (CurrentMatchingMethod < 0) {
+    CurrentMatchingMethod = NUMMatchingMethodEnabled - 1;
+  }
+  config.matching_method = MatchingMethodEnabled[CurrentMatchingMethod];
+}
 
 void cmd_set_arguments(int argc, char **argv) {
   stored_argc = argc;
@@ -582,7 +609,7 @@ int create_pid_file(const char *pidfile, gboolean kill_running) {
       char buffer[64] = {
           0,
       };
-      ssize_t l = read(fd, &buffer, 63);
+      ssize_t l = read(fd, &(buffer[0]), 63);
       if (l > 1) {
         buffer[l] = 0;
         pid_t pid = g_ascii_strtoll(buffer, NULL, 0);
@@ -664,24 +691,40 @@ int config_sanity_check(void) {
   }
 
   if (config.matching) {
-    if (g_strcmp0(config.matching, "regex") == 0) {
-      config.matching_method = MM_REGEX;
-    } else if (g_strcmp0(config.matching, "glob") == 0) {
-      config.matching_method = MM_GLOB;
-    } else if (g_strcmp0(config.matching, "fuzzy") == 0) {
-      config.matching_method = MM_FUZZY;
-    } else if (g_strcmp0(config.matching, "normal") == 0) {
-      config.matching_method = MM_NORMAL;
-      ;
-    } else if (g_strcmp0(config.matching, "prefix") == 0) {
-      config.matching_method = MM_PREFIX;
-    } else {
-      g_string_append_printf(msg,
-                             "\t<b>config.matching</b>=%s is not a valid "
-                             "matching strategy.\nValid options are: glob, "
-                             "regex, fuzzy, prefix or normal.\n",
-                             config.matching);
-      found_error = 1;
+    char **strv = g_strsplit(config.matching, ",", 0);
+    if (strv) {
+      int matching_method_index = 0;
+      for (char **str = strv; *str && matching_method_index < MM_NUM_MATCHERS;
+           str++) {
+        gboolean found = FALSE;
+        for (unsigned i = 0;
+             i < MM_NUM_MATCHERS && matching_method_index < MM_NUM_MATCHERS;
+             i++) {
+          if (g_ascii_strcasecmp(*str, MatchingMethodStr[i]) == 0) {
+            MatchingMethodEnabled[matching_method_index] = i;
+            matching_method_index++;
+            NUMMatchingMethodEnabled = matching_method_index;
+            if (matching_method_index == MM_NUM_MATCHERS) {
+              found_error = 1;
+              g_string_append_printf(msg,
+                                     "\t<b>config.matching</b> = %s to many "
+                                     "matching options enabled.\n",
+                                     config.matching);
+            }
+            found = TRUE;
+          }
+        }
+        if (!found) {
+          g_string_append_printf(msg,
+                                 "\t<b>config.matching</b>=%s is not a valid "
+                                 "matching strategy.\nValid options are: glob, "
+                                 "regex, fuzzy, prefix or normal.\n",
+                                 *str);
+          found_error = 1;
+        }
+      }
+      config.matching_method = MatchingMethodEnabled[0];
+      g_strfreev(strv);
     }
   }
 
@@ -769,7 +812,8 @@ char *rofi_expand_path(const char *input) {
   ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
 
 unsigned int levenshtein(const char *needle, const glong needlelen,
-                         const char *haystack, const glong haystacklen) {
+                         const char *haystack, const glong haystacklen,
+                         int case_sensitive) {
   if (needlelen == G_MAXLONG) {
     // String to long, we cannot handle this.
     return UINT_MAX;
@@ -785,12 +829,12 @@ unsigned int levenshtein(const char *needle, const glong needlelen,
     const char *needles = needle;
     column[0] = x;
     gunichar haystackc = g_utf8_get_char(haystack);
-    if (!config.case_sensitive) {
+    if (!case_sensitive) {
       haystackc = g_unichar_tolower(haystackc);
     }
     for (glong y = 1, lastdiag = x - 1; y <= needlelen; y++) {
       gunichar needlec = g_utf8_get_char(needles);
-      if (!config.case_sensitive) {
+      if (!case_sensitive) {
         needlec = g_unichar_tolower(needlec);
       }
       unsigned int olddiag = column[y];
@@ -917,7 +961,7 @@ static int rofi_scorer_get_score_for(enum CharClass prev, enum CharClass curr) {
 }
 
 int rofi_scorer_fuzzy_evaluate(const char *pattern, glong plen, const char *str,
-                               glong slen) {
+                               glong slen, int case_sensitive) {
   if (slen > FUZZY_SCORER_MAX_LENGTH) {
     return -MIN_SCORE;
   }
@@ -952,9 +996,8 @@ int rofi_scorer_fuzzy_evaluate(const char *pattern, glong plen, const char *str,
       left = dp[si];
       lefts = MAX(lefts + GAP_SCORE, left);
       sc = g_utf8_get_char(sit);
-      if (config.case_sensitive
-              ? pc == sc
-              : g_unichar_tolower(pc) == g_unichar_tolower(sc)) {
+      if (case_sensitive ? pc == sc
+                         : g_unichar_tolower(pc) == g_unichar_tolower(sc)) {
         int t = score[si] * (pstart ? PATTERN_START_MULTIPLIER
                                     : PATTERN_NON_START_MULTIPLIER);
         dp[si] = pfirst ? LEADING_GAP_SCORE * si + t
@@ -1248,6 +1291,28 @@ void parse_ranges(char *input, rofi_range_pair **list, unsigned int *length) {
     }
   }
 }
+
+int parse_case_sensitivity(const char *input) {
+  int case_sensitive = config.case_sensitive;
+  if (config.case_smart) {
+    // By default case is false, unless the search query has a
+    // uppercase in it?
+    case_sensitive = FALSE;
+    const char *end;
+    if (g_utf8_validate(input, -1, &end)) {
+      for (const char *c = (input); !case_sensitive && c != NULL && *c;
+           c = g_utf8_next_char(c)) {
+        gunichar uc = g_utf8_get_char(c);
+        if (g_unichar_isupper(uc)) {
+          case_sensitive = TRUE;
+        }
+      }
+    }
+  }
+
+  return case_sensitive;
+}
+
 void rofi_output_formatted_line(const char *format, const char *string,
                                 int selected_line, const char *filter) {
   for (int i = 0; format && format[i]; i++) {

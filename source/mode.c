@@ -159,6 +159,11 @@ const char *mode_get_name(const Mode *mode) {
   return mode->name;
 }
 
+int mode_get_abi_version(Mode *const mode) {
+  g_assert(mode != NULL);
+  return mode->abi_version;
+}
+
 void mode_free(Mode **mode) {
   g_assert(mode != NULL);
   g_assert((*mode) != NULL);
@@ -245,4 +250,10 @@ gboolean mode_is_completer(const Mode *mode) {
   return FALSE;
 }
 
+void mode_plugin_set_module(Mode *mode, GModule *mod){
+  mode->module = mod;
+}
+GModule *mode_plugin_get_module(Mode *mode){
+  return mode->module;
+}
 /**@}*/

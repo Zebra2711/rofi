@@ -81,14 +81,15 @@ struct _rofi_view_cache_state CacheState = {
     .max_refilter_time = 0.0,
     .delayed_mode = FALSE,
     .user_timeout = 0,
+    .overlay_timeout = 0,
     .entry_history_enable = TRUE,
     .entry_history = NULL,
     .entry_history_length = 0,
     .entry_history_index = 0,
 };
 
-static char *get_matching_state(void) {
-  if (config.case_sensitive) {
+static char *get_matching_state(RofiViewState* state) {
+  if (state->case_sensitive) {
     if (config.sort) {
       return "±";
     } else {
@@ -111,6 +112,18 @@ static int lev_sort(const void *p1, const void *p2, void *arg) {
   int *distances = arg;
 
   return distances[*a] - distances[*b];
+}
+
+static void screenshot_taken_user_callback(const char *path) {
+  if (config.on_screenshot_taken == NULL)
+    return;
+
+  char **args = NULL;
+  int argv = 0;
+  helper_parse_setup(config.on_screenshot_taken, &args, &argv, "{path}", path,
+                     (char *)0);
+  if (args != NULL)
+    helper_execute(NULL, args, "", config.on_screenshot_taken, NULL);
 }
 
 /**
@@ -172,6 +185,7 @@ void rofi_capture_screenshot(void) {
         g_warning("Failed to produce screenshot '%s', got error: '%s'", fpath,
                   cairo_status_to_string(status));
       }
+      screenshot_taken_user_callback(fpath);
     }
     cairo_destroy(draw);
   }
@@ -444,12 +458,13 @@ static void filter_elements(thread_state *ts,
         glong slen = g_utf8_strlen(str, -1);
         switch (config.sorting_method_enum) {
         case SORT_FZF:
-          t->state->distance[i] =
-              rofi_scorer_fuzzy_evaluate(t->pattern, t->plen, str, slen);
+          t->state->distance[i] = rofi_scorer_fuzzy_evaluate(
+              t->pattern, t->plen, str, slen, t->state->case_sensitive);
           break;
         case SORT_NORMAL:
         default:
-          t->state->distance[i] = levenshtein(t->pattern, t->plen, str, slen);
+          t->state->distance[i] = levenshtein(t->pattern, t->plen, str, slen,
+                                              t->state->case_sensitive);
           break;
         }
         g_free(str);
@@ -620,9 +635,31 @@ inline static void rofi_view_nav_last(RofiViewState *state) {
   // state->selected = state->filtered_lines - 1;
   listview_set_selected(state->list_view, -1);
 }
+static void selection_changed_user_callback(unsigned int index,
+                                            RofiViewState *state) {
+  if (config.on_selection_changed == NULL)
+    return;
+
+  int fstate = 0;
+  char *text = mode_get_display_value(state->sw, state->line_map[index],
+                                      &fstate, NULL, TRUE);
+  char **args = NULL;
+  int argv = 0;
+  helper_parse_setup(config.on_selection_changed, &args, &argv, "{entry}", text,
+                     (char *)0);
+  if (args != NULL)
+    helper_execute(NULL, args, "", config.on_selection_changed, NULL);
+  g_free(text);
+}
 static void selection_changed_callback(G_GNUC_UNUSED listview *lv,
                                        unsigned int index, void *udata) {
   RofiViewState *state = (RofiViewState *)udata;
+  if (index < state->filtered_lines) {
+    if (state->previous_line != state->line_map[index]) {
+      selection_changed_user_callback(index, state);
+      state->previous_line = state->line_map[index];
+    }
+  }
   if (state->tb_current_entry) {
     if (index < state->filtered_lines) {
       int fstate = 0;
@@ -630,7 +667,6 @@ static void selection_changed_callback(G_GNUC_UNUSED listview *lv,
                                           &fstate, NULL, TRUE);
       textbox_text(state->tb_current_entry, text);
       g_free(text);
-
     } else {
       textbox_text(state->tb_current_entry, "");
     }
@@ -742,7 +778,12 @@ static gboolean rofi_view_refilter_real(RofiViewState *state) {
     unsigned int j = 0;
     gchar *pattern = mode_preprocess_input(state->sw, state->text->text);
     glong plen = pattern ? g_utf8_strlen(pattern, -1) : 0;
-    state->tokens = helper_tokenize(pattern, config.case_sensitive);
+    state->case_sensitive = parse_case_sensitivity(state->text->text);
+    state->tokens = helper_tokenize(pattern, state->case_sensitive);
+
+    if (config.case_smart && state->case_indicator) {
+      textbox_text(state->case_indicator, get_matching_state(state));
+    }
     /**
      * On long lists it can be beneficial to parallelize.
      * If number of threads is 1, no thread is spawn.
@@ -1008,7 +1049,7 @@ static void rofi_view_trigger_global_action(KeyBindingAction action) {
     if (state->case_indicator != NULL) {
       config.sort = !config.sort;
       state->refilter = TRUE;
-      textbox_text(state->case_indicator, get_matching_state());
+      textbox_text(state->case_indicator, get_matching_state(state));
     }
     break;
   case MODE_PREVIOUS:
@@ -1038,7 +1079,7 @@ static void rofi_view_trigger_global_action(KeyBindingAction action) {
       config.case_sensitive = !config.case_sensitive;
       (state->selected_line) = 0;
       state->refilter = TRUE;
-      textbox_text(state->case_indicator, get_matching_state());
+      textbox_text(state->case_indicator, get_matching_state(state));
     }
     break;
   // Special delete entry command.
@@ -1214,7 +1255,6 @@ static void rofi_view_trigger_global_action(KeyBindingAction action) {
       // Nothing entered and nothing selected.
       state->retv = MENU_CUSTOM_INPUT;
     }
-
     state->quit = TRUE;
     break;
   }
@@ -1273,6 +1313,16 @@ static void rofi_view_trigger_global_action(KeyBindingAction action) {
     }
     break;
   }
+  case MATCHER_UP:
+    helper_select_next_matching_mode();
+    rofi_view_refilter(state);
+    rofi_view_set_overlay_timeout(state, helper_get_matching_mode_str());
+    break;
+  case MATCHER_DOWN:
+    helper_select_previous_matching_mode();
+    rofi_view_refilter(state);
+    rofi_view_set_overlay_timeout(state, helper_get_matching_mode_str());
+    break;
   }
 }
 
@@ -1410,6 +1460,62 @@ void rofi_view_handle_mouse_motion(RofiViewState *state, gint x, gint y,
   }
 }
 
+static void rofi_quit_user_callback(RofiViewState *state) {
+  if (state->retv & MENU_OK) {
+    if (config.on_entry_accepted == NULL)
+      return;
+    int fstate = 0;
+    unsigned int selected = listview_get_selected(state->list_view);
+    // TODO: handle custom text
+    if (selected >= state->filtered_lines)
+      return;
+    // Pass selected text to custom command
+    char *text = mode_get_display_value(state->sw, state->line_map[selected],
+                                        &fstate, NULL, TRUE);
+    char **args = NULL;
+    int argv = 0;
+    helper_parse_setup(config.on_entry_accepted, &args, &argv, "{entry}", text,
+                       (char *)0);
+    if (args != NULL)
+      helper_execute(NULL, args, "", config.on_entry_accepted, NULL);
+    g_free(text);
+  } else if (state->retv & MENU_CANCEL) {
+    if (config.on_menu_canceled == NULL)
+      return;
+    helper_execute_command(NULL, config.on_menu_canceled, FALSE, NULL);
+  } else if (state->retv & MENU_NEXT || state->retv & MENU_PREVIOUS ||
+             state->retv & MENU_QUICK_SWITCH || state->retv & MENU_COMPLETE) {
+    if (config.on_mode_changed == NULL)
+      return;
+    // TODO: pass mode name to custom command
+    helper_execute_command(NULL, config.on_mode_changed, FALSE, NULL);
+  }
+}
+
+void rofi_view_maybe_update(RofiViewState *state) {
+  if (rofi_view_get_completed(state)) {
+    // Exec custom user commands
+    rofi_quit_user_callback(state);
+    // This menu is done.
+    rofi_view_finalize(state);
+    // If there a state. (for example error) reload it.
+    state = rofi_view_get_active();
+
+    // cleanup, if no more state to display.
+    if (state == NULL) {
+      // Quit main-loop.
+      rofi_quit_main_loop();
+      return;
+    }
+  }
+
+  // Update if requested.
+  if (state->refilter) {
+    rofi_view_refilter(state);
+  }
+  rofi_view_update(state, TRUE);
+  return;
+}
 WidgetTriggerActionResult textbox_button_trigger_action(
     widget *wid, MouseBindingMouseDefaultAction action, G_GNUC_UNUSED gint x,
     G_GNUC_UNUSED gint y, G_GNUC_UNUSED void *user_data) {
@@ -1558,7 +1664,7 @@ static void rofi_view_add_widget(RofiViewState *state, widget *parent_widget,
                        TB_AUTOWIDTH | TB_AUTOHEIGHT, NORMAL, "*", 0, 0);
     // Add small separator between case indicator and text box.
     box_add((box *)parent_widget, WIDGET(state->case_indicator), FALSE);
-    textbox_text(state->case_indicator, get_matching_state());
+    textbox_text(state->case_indicator, get_matching_state(state));
   }
   /**
    * ENTRY BOX
@@ -1694,6 +1800,7 @@ RofiViewState *rofi_view_create(Mode *sw, const char *input,
   state->menu_flags = menu_flags;
   state->sw = sw;
   state->selected_line = UINT32_MAX;
+  state->previous_line = UINT32_MAX;
   state->retv = MENU_CANCEL;
   state->distance = NULL;
   state->quit = FALSE;
@@ -1793,6 +1900,18 @@ RofiViewState *rofi_view_create(Mode *sw, const char *input,
   return state;
 }
 
+static void rofi_error_user_callback(const char *msg) {
+  if (config.on_menu_error == NULL)
+    return;
+
+  char **args = NULL;
+  int argv = 0;
+  helper_parse_setup(config.on_menu_error, &args, &argv, "{error}", msg,
+                     (char *)0);
+  if (args != NULL)
+    helper_execute(NULL, args, "", config.on_menu_error, NULL);
+}
+
 int rofi_view_error_dialog(const char *msg, int markup) {
   RofiViewState *state = __rofi_view_state_create();
   state->retv = MENU_CANCEL;
@@ -1835,6 +1954,9 @@ int rofi_view_error_dialog(const char *msg, int markup) {
     sn_launchee_context_complete(xcb->sncontext);
   }
 #endif
+
+  // Exec custom command
+  rofi_error_user_callback(msg);
 
   // Set it as current window.
   rofi_view_set_active(state);
@@ -1905,9 +2027,37 @@ void rofi_view_workers_finalize(void) {
 }
 Mode *rofi_view_get_mode(RofiViewState *state) { return state->sw; }
 
+static gboolean rofi_view_overlay_timeout(G_GNUC_UNUSED gpointer user_data) {
+  RofiViewState *state = rofi_view_get_active();
+  if (state) {
+    widget_disable(WIDGET(state->overlay));
+  }
+  CacheState.overlay_timeout = 0;
+  rofi_view_queue_redraw();
+  return G_SOURCE_REMOVE;
+}
+
+void rofi_view_set_overlay_timeout(RofiViewState *state, const char *text) {
+  if (state->overlay == NULL || state->list_view == NULL) {
+    return;
+  }
+  if (text == NULL) {
+    widget_disable(WIDGET(state->overlay));
+    return;
+  }
+  rofi_view_set_overlay(state, text);
+  int timeout = rofi_theme_get_integer(WIDGET(state->overlay), "timeout", 3);
+  CacheState.overlay_timeout =
+      g_timeout_add_seconds(timeout, rofi_view_overlay_timeout, state);
+}
+
 void rofi_view_set_overlay(RofiViewState *state, const char *text) {
   if (state->overlay == NULL || state->list_view == NULL) {
     return;
+  }
+  if (CacheState.overlay_timeout > 0) {
+    g_source_remove(CacheState.overlay_timeout);
+    CacheState.overlay_timeout = 0;
   }
   if (text == NULL) {
     widget_disable(WIDGET(state->overlay));
@@ -1963,10 +2113,6 @@ void rofi_view_switch_mode(RofiViewState *state, Mode *mode) {
 
 void rofi_view_update(RofiViewState *state, gboolean qr) {
   proxy->update(state, qr);
-}
-
-void rofi_view_maybe_update(RofiViewState *state) {
-  proxy->maybe_update(state);
 }
 
 void rofi_view_temp_configure_notify(RofiViewState *state,

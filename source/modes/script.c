@@ -350,6 +350,10 @@ static ModeMode script_mode_result(Mode *sw, int mretv, char **input,
       retv = (mretv & MENU_LOWER_MASK);
       return retv;
     }
+  } else if ((mretv & MENU_ENTRY_DELETE) && selected_line != UINT32_MAX) {
+    script_mode_reset_highlight(sw);
+    new_list = execute_executor(sw, rmpd->cmd_list[selected_line].entry, &new_length,
+                                3, &(rmpd->cmd_list[selected_line]));
   } else if ((mretv & MENU_OK) && rmpd->cmd_list[selected_line].entry != NULL) {
     if (rmpd->cmd_list[selected_line].nonselectable) {
       return RELOAD_DIALOG;

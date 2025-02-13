@@ -59,6 +59,7 @@ An integer number with the current state:
 - **0**: Initial call of script.
 - **1**: Selected an entry.
 - **2**: Selected a custom entry.
+- **3**: Deleted an entry.
 - **10-28**: Custom keybinding 1-19 ( need to be explicitly enabled by script ).
 
 ### `ROFI_INFO`
@@ -109,7 +110,7 @@ The following extra options exists:
 -   **keep-selection**: If set, the selection is not moved to the first entry,
     but the current position is maintained. The filter is cleared.
 
--   **keep-filter**: If set, the filter is not cleared. 
+-   **keep-filter**: If set, the filter is not cleared.
 
 -   **new-selection**: If `keep-selection` is set, this allows you to override
     the selected entry (absolute position).
