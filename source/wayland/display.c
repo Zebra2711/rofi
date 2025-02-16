@@ -440,7 +440,11 @@ static gboolean wayland_key_repeat_delay(void *data) {
     rofi_view_handle_text(state, text);
   }
 
-  guint source_id = g_timeout_add(self->repeat.rate, wayland_key_repeat, data);
+  guint repeat_wait_ms = 30;
+  if (self->repeat.rate != 0) {
+    repeat_wait_ms = 1000 / self->repeat.rate;
+  }
+  guint source_id = g_timeout_add(repeat_wait_ms, wayland_key_repeat, data);
   self->repeat.source = g_main_context_find_source_by_id(NULL, source_id);
 
   rofi_view_maybe_update(state);
