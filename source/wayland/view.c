@@ -215,35 +215,6 @@ static void wayland_rofi_view_queue_redraw(void) {
   }
 }
 
-/**
- * Thread state for workers started for the view.
- */
-typedef struct _thread_state_view {
-  /** Generic thread state. */
-  thread_state st;
-
-  /** Condition. */
-  GCond *cond;
-  /** Lock for condition. */
-  GMutex *mutex;
-  /** Count that is protected by lock. */
-  unsigned int *acount;
-
-  /** Current state. */
-  RofiViewState *state;
-  /** Start row for this worker. */
-  unsigned int start;
-  /** Stop row for this worker. */
-  unsigned int stop;
-  /** Rows processed. */
-  unsigned int count;
-
-  /** Pattern input to filter. */
-  const char *pattern;
-  /** Length of pattern. */
-  glong plen;
-} thread_state_view;
-
 static void wayland___create_window(MenuFlags menu_flags) {
   input_history_initialize();
 

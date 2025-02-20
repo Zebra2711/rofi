@@ -341,8 +341,6 @@ static void wayland_frame_callback(void *data, struct wl_callback *callback,
 static void wayland_keyboard_keymap(void *data, struct wl_keyboard *keyboard,
                                     enum wl_keyboard_keymap_format format,
                                     int32_t fd, uint32_t size) {
-  wayland_seat *self = data;
-
   if (format != WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1) {
     close(fd);
     return;

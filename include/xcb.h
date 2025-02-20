@@ -99,18 +99,6 @@ extern const char *netatom_names[];
 extern xcb_atom_t netatoms[NUM_NETATOMS];
 
 /**
- * @param w rofis window
- *
- * Stores old input focus for reverting and set focus to rofi.
- */
-void rofi_xcb_set_input_focus(xcb_window_t w);
-
-/**
- * IF set, revert the focus back to the original applications.
- */
-void rofi_xcb_revert_input_focus(void);
-
-/**
  * Depth of visual
  */
 extern xcb_depth_t *depth;
