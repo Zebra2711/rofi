@@ -396,30 +396,30 @@ static void rofi_view_calculate_window_position(RofiViewState *state) {
   switch (location) {
   case WL_NORTH_WEST:
     state->x = CacheState.mon.x;
-  /* FALLTHRU */
+    rofi_fallthrough;
   case WL_NORTH:
     state->y = CacheState.mon.y;
     break;
   case WL_NORTH_EAST:
     state->y = CacheState.mon.y;
-  /* FALLTHRU */
+    rofi_fallthrough;
   case WL_EAST:
     state->x = CacheState.mon.x + CacheState.mon.w;
     break;
   case WL_SOUTH_EAST:
     state->x = CacheState.mon.x + CacheState.mon.w;
-  /* FALLTHRU */
+    rofi_fallthrough;
   case WL_SOUTH:
     state->y = CacheState.mon.y + CacheState.mon.h;
     break;
   case WL_SOUTH_WEST:
     state->y = CacheState.mon.y + CacheState.mon.h;
-  /* FALLTHRU */
+    rofi_fallthrough;
   case WL_WEST:
     state->x = CacheState.mon.x;
     break;
   case WL_CENTER:;
-  /* FALLTHRU */
+    rofi_fallthrough;
   default:
     break;
   }
@@ -2057,10 +2057,10 @@ void rofi_view_trigger_action(RofiViewState *state, BindingsScope scope,
       return;
     case WIDGET_TRIGGER_ACTION_RESULT_GRAB_MOTION_END:
       target = NULL;
-    /* FALLTHRU */
+      rofi_fallthrough;
     case WIDGET_TRIGGER_ACTION_RESULT_GRAB_MOTION_BEGIN:
       state->mouse.motion_target = target;
-    /* FALLTHRU */
+      rofi_fallthrough;
     case WIDGET_TRIGGER_ACTION_RESULT_HANDLED:
       return;
     }
