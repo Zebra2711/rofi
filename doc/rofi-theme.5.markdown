@@ -985,10 +985,10 @@ The following properties are currently supported:
 
 - **transparency**:    string
     Indicating if transparency should be used and what type:
-  - **real** - True transparency. Only works with a compositor.
-  - **background** - Take a screenshot of the background image and use that.
-  - **screenshot** - Take a screenshot of the screen and use that.
-  - **Path** to png file - Use an image.
+    - **real** - True transparency. Only works with a compositor.
+    - **background** - Take a screenshot of the background image and use that.
+    - **screenshot** - Take a screenshot of the screen and use that.
+    - **Path** to png file - Use an image.
 
 - **location**:       position
       The place of the anchor on the monitor
