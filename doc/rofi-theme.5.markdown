@@ -964,6 +964,11 @@ The following properties are currently supported:
 
 - **border-radius**:     padding
     Sets a radius on the corners of the borders.
+- border-aa:  boolean
+    Disable aliasing on the border line. Disabling fixes some drawing issues because of nvidia broken driver workaround.
+
+- border-disable-nvidia-workaround: boolean
+    Disable work-around for nvidia driver breaking.
 
 - **background-color**:  color
     Background color
@@ -985,10 +990,10 @@ The following properties are currently supported:
 
 - **transparency**:    string
     Indicating if transparency should be used and what type:
-    - **real** - True transparency. Only works with a compositor.
-    - **background** - Take a screenshot of the background image and use that.
-    - **screenshot** - Take a screenshot of the screen and use that.
-    - **Path** to png file - Use an image.
+  - **real** - True transparency. Only works with a compositor.
+  - **background** - Take a screenshot of the background image and use that.
+  - **screenshot** - Take a screenshot of the screen and use that.
+  - **Path** to png file - Use an image.
 
 - **location**:       position
       The place of the anchor on the monitor

@@ -24,6 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
+#include "cairo.h"
 #include "config.h"
 
 #include "theme.h"
@@ -53,6 +54,10 @@ void widget_init(widget *wid, widget *parent, WidgetType type,
 
   // enabled by default
   wid->enabled = rofi_theme_get_boolean(wid, "enabled", TRUE);
+
+  wid->border_antialiasing = rofi_theme_get_boolean(wid, "border-aa", TRUE);
+  wid->border_disable_nvidia_workaround =
+      rofi_theme_get_boolean(wid, "border-disable-nvidia-workaround", FALSE);
 }
 
 void widget_set_state(widget *wid, const char *state) {
@@ -251,7 +256,12 @@ void widget_draw(widget *wid, cairo_t *d) {
 
     if (left != 0 || top != 0 || right != 0 || bottom != 0) {
       cairo_save(d);
-      //      cairo_set_operator(d, CAIRO_OPERATOR_ADD);
+      if (wid->border_antialiasing == FALSE) {
+        cairo_set_antialias(d, CAIRO_ANTIALIAS_NONE);
+      }
+      if (wid->border_disable_nvidia_workaround) {
+        cairo_set_operator(d, CAIRO_OPERATOR_ADD);
+      }
       cairo_translate(d, wid->x, wid->y);
       cairo_new_path(d);
       rofi_theme_get_color(wid, "border-color", d);
