@@ -348,7 +348,7 @@ static void xcb_rofi_view_calculate_window_position(RofiViewState *state) {
     rofi_fallthrough;
   case WL_NORTH:
     state->y = XcbState.mon.y;
-    rofi_fallthrough;
+    break;
   case WL_NORTH_EAST:
     state->y = XcbState.mon.y;
     rofi_fallthrough;
