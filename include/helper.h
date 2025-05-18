@@ -455,6 +455,19 @@ void helper_select_next_matching_mode(void);
  * Switch to the previous matching method.
  */
 void helper_select_previous_matching_mode(void);
+
+/**
+ * Method to indicate fallthrough. This will help
+ * gcc/llvm warning/static code analysis.
+ */
+#if __has_attribute(__fallthrough__)
+#define rofi_fallthrough __attribute__((__fallthrough__))
+#else
+#define rofi_fallthrough                                                       \
+  do {                                                                         \
+  } while (0) /* fallthrough */
+#endif
+
 G_END_DECLS
 
 /**@} */

@@ -341,10 +341,10 @@ void rofi_view_set_selected_line(RofiViewState *state,
     }
   }
   listview_set_selected(state->list_view, selected);
-
 #ifdef ENABLE_XCB
   if (config.backend == DISPLAY_XCB) {
-    xcb_clear_area(xcb->connection, CacheState.main_window, 1, 0, 0, 1, 1);
+    // Clear the window and force an expose event resulting in a redraw.
+    xcb_clear_area(xcb->connection, 1, CacheState.main_window, 0, 0, 1, 1);
     xcb_flush(xcb->connection);
   }
 #endif
@@ -1386,10 +1386,10 @@ void rofi_view_trigger_action(RofiViewState *state, BindingsScope scope,
       return;
     case WIDGET_TRIGGER_ACTION_RESULT_GRAB_MOTION_END:
       target = NULL;
-    /* FALLTHRU */
+      rofi_fallthrough;
     case WIDGET_TRIGGER_ACTION_RESULT_GRAB_MOTION_BEGIN:
       state->mouse.motion_target = target;
-    /* FALLTHRU */
+      rofi_fallthrough;
     case WIDGET_TRIGGER_ACTION_RESULT_HANDLED:
       return;
     }

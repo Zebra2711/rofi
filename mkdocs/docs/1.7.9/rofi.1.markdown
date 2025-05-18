@@ -428,13 +428,6 @@ The different fields are:
 - **desktop**: window's current desktop
 - **all**: all the above
 
-For Wayland, the list of accepted fields is different:
-
-* **title**: window's title
-* **app-id**: Wayland Application ID or XWayland window's class
-* **class**: same as app-id
-* **all**: all of the above
-
 Default: *all*
 
 `-matching-negate-char` *string*
@@ -881,14 +874,6 @@ configuration {
 Click the mouse outside the **rofi** window to exit.
 
 Default: *enabled*
-
-`-global-kb`
-`-no-global-kb`
-
-(wayland) Override the compositor's keybindings, so that **rofi** can re-use them.
-
-Default: *disabled*
-
 
 `-xserver-i300-workaround`
 

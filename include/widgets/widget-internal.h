@@ -83,6 +83,12 @@ struct _widget {
   gboolean expand;
   /** Place widget at end of parent */
   gboolean end;
+
+  /** enable/disable border aliasing. */
+  gboolean border_antialiasing;
+  /** enable/disable nvisia workaround. */
+  gboolean border_disable_nvidia_workaround;
+
   /** Parent widget */
   struct _widget *parent;
   /** Internal */

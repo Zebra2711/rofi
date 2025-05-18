@@ -216,6 +216,7 @@ struct _DRunModePrivateData {
   unsigned int expected_line_height;
 
   char **show_categories;
+  char **exclude_categories;
 
   // Theme
   const gchar *icon_theme;
@@ -236,6 +237,7 @@ struct RegexEvalArg {
   const char *path;
   gboolean success;
 };
+static void drun_entry_clear(DRunModeEntry *e);
 
 static gboolean drun_helper_eval_cb(const GMatchInfo *info, GString *res,
                                     gpointer data) {
@@ -722,6 +724,19 @@ static void read_desktop_file(DRunModePrivateData *pd, const char *root,
     }
   }
 
+  if (pd->exclude_categories) {
+    if (categories == NULL) {
+      categories = g_key_file_get_locale_string_list(
+          kf, DRUN_GROUP_NAME, "Categories", NULL, NULL, NULL);
+    }
+    if (rofi_strv_contains((const char *const *)categories,
+                            (const char *const *)pd->exclude_categories)) {
+      g_strfreev(categories);
+      g_key_file_free(kf);
+      return;
+    }
+  }
+
   size_t nl = ((pd->cmd_list_length) + 1);
   if (nl >= pd->cmd_list_length_actual) {
     pd->cmd_list_length_actual += 256;
@@ -966,18 +981,19 @@ static void drun_write_str(FILE *fd, const char *str) {
 static void drun_write_integer(FILE *fd, int32_t val) {
   fwrite(&val, sizeof(val), 1, fd);
 }
-static void drun_read_integer(FILE *fd, int32_t *type) {
+static gboolean drun_read_integer(FILE *fd, int32_t *type) {
   if (fread(type, sizeof(int32_t), 1, fd) != 1) {
     g_warning("Failed to read entry, cache corrupt?");
-    return;
+    return TRUE;
   }
+  return FALSE;
 }
-static void drun_read_string(FILE *fd, char **str) {
+static gboolean drun_read_string(FILE *fd, char **str) {
   size_t l = 0;
 
   if (fread(&l, sizeof(l), 1, fd) != 1) {
     g_warning("Failed to read entry, cache corrupt?");
-    return;
+    return TRUE;
   }
   (*str) = NULL;
   if (l > 0) {
@@ -986,8 +1002,10 @@ static void drun_read_string(FILE *fd, char **str) {
     (*str) = g_malloc(l);
     if (fread((*str), 1, l, fd) != l) {
       g_warning("Failed to read entry, cache corrupt?");
+      return TRUE;
     }
   }
+  return FALSE;
 }
 static void drun_write_strv(FILE *fd, char **str) {
   guint vl = (str == NULL ? 0 : g_strv_length(str));
@@ -996,20 +1014,23 @@ static void drun_write_strv(FILE *fd, char **str) {
     drun_write_str(fd, str[index]);
   }
 }
-static void drun_read_stringv(FILE *fd, char ***str) {
+static gboolean drun_read_stringv(FILE *fd, char ***str) {
   guint vl = 0;
   (*str) = NULL;
   if (fread(&vl, sizeof(vl), 1, fd) != 1) {
     g_warning("Failed to read entry, cache corrupt?");
-    return;
+    return TRUE;
   }
   if (vl > 0) {
     // Include terminating NULL entry.
     (*str) = g_malloc0((vl + 1) * sizeof(**str));
     for (guint index = 0; index < vl; index++) {
-      drun_read_string(fd, &((*str)[index]));
+      if (drun_read_string(fd, &((*str)[index]))) {
+        return TRUE;
+      }
     }
   }
+  return FALSE;
 }
 
 static void write_cache(DRunModePrivateData *pd, const char *cache_file) {
@@ -1100,30 +1121,82 @@ static gboolean drun_read_cache(DRunModePrivateData *pd,
   pd->entry_list =
       g_malloc0(pd->cmd_list_length_actual * sizeof(*(pd->entry_list)));
 
-  for (unsigned int index = 0; index < pd->cmd_list_length; index++) {
+  int error = 0;
+  for (unsigned int index = 0; !error && index < pd->cmd_list_length; index++) {
     DRunModeEntry *entry = &(pd->entry_list[index]);
 
-    drun_read_string(fd, &(entry->action));
-    drun_read_string(fd, &(entry->root));
-    drun_read_string(fd, &(entry->path));
-    drun_read_string(fd, &(entry->app_id));
-    drun_read_string(fd, &(entry->desktop_id));
-    drun_read_string(fd, &(entry->icon_name));
-    drun_read_string(fd, &(entry->exec));
-    drun_read_string(fd, &(entry->name));
-    drun_read_string(fd, &(entry->generic_name));
+    if (drun_read_string(fd, &(entry->action))) {
+      error = 1;
+      continue;
+    }
+    if (drun_read_string(fd, &(entry->root))) {
+      error = 1;
+      continue;
+    }
+    if (drun_read_string(fd, &(entry->path))) {
+      error = 1;
+      continue;
+    }
+    if (drun_read_string(fd, &(entry->app_id))) {
+      error = 1;
+      continue;
+    }
+    if (drun_read_string(fd, &(entry->desktop_id))) {
+      error = 1;
+      continue;
+    }
+    if (drun_read_string(fd, &(entry->icon_name))) {
+      error = 1;
+      continue;
+    }
+    if (drun_read_string(fd, &(entry->exec))) {
+      error = 1;
+      continue;
+    }
+    if (drun_read_string(fd, &(entry->name))) {
+      error = 1;
+      continue;
+    }
+    if (drun_read_string(fd, &(entry->generic_name))) {
+      error = 1;
+      continue;
+    }
 
-    drun_read_stringv(fd, &(entry->categories));
-    drun_read_stringv(fd, &(entry->keywords));
+    if (drun_read_stringv(fd, &(entry->categories))) {
+      error = 1;
+      continue;
+    }
+    if (drun_read_stringv(fd, &(entry->keywords))) {
+      error = 1;
+      continue;
+    }
 
-    drun_read_string(fd, &(entry->comment));
-    drun_read_string(fd, &(entry->url));
+    if (drun_read_string(fd, &(entry->comment))) {
+      error = 1;
+      continue;
+    }
+    if (drun_read_string(fd, &(entry->url))) {
+      error = 1;
+      continue;
+    }
     int32_t type = 0;
-    drun_read_integer(fd, &(type));
+    if (drun_read_integer(fd, &(type))) {
+      error = 1;
+      continue;
+    }
     entry->type = type;
   }
 
   fclose(fd);
+  if (error) {
+    for (size_t i = 0; i < pd->cmd_list_length; i++) {
+      drun_entry_clear(&(pd->entry_list[i]));
+    }
+    g_free(pd->entry_list);
+    pd->cmd_list_length = 0;
+    pd->cmd_list_length_actual = 0;
+    return TRUE;
+  }
   TICK_N("DRUN Read CACHE: stop");
   return FALSE;
 }
@@ -1190,6 +1263,8 @@ static void get_apps(DRunModePrivateData *pd) {
     TICK_N("Sorting done.");
 
     write_cache(pd, cache_file);
+  } else {
+    g_debug("Read drun entries from cache.");
   }
   g_free(cache_file);
 }
@@ -1261,6 +1336,10 @@ static int drun_mode_init(Mode *sw) {
     pd->show_categories = g_strsplit(config.drun_categories, ",", 0);
   }
 
+  if (config.drun_exclude_categories && *(config.drun_exclude_categories)) {
+    pd->exclude_categories = g_strsplit(config.drun_exclude_categories, ",", 0);
+  }
+
   drun_mode_parse_entry_fields();
   drun_mode_parse_display_format();
   get_apps(pd);
@@ -1269,6 +1348,9 @@ static int drun_mode_init(Mode *sw) {
   return TRUE;
 }
 static void drun_entry_clear(DRunModeEntry *e) {
+  if (e == NULL) {
+    return;
+  }
   g_free(e->root);
   g_free(e->path);
   g_free(e->app_id);
@@ -1411,6 +1493,7 @@ static void drun_mode_destroy(Mode *sw) {
 
     g_strfreev(rmpd->current_desktop_list);
     g_strfreev(rmpd->show_categories);
+    g_strfreev(rmpd->exclude_categories);
     g_free(rmpd);
     mode_set_private_data(sw, NULL);
   }

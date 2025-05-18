@@ -294,13 +294,14 @@ static void xcb_rofi_view_update(RofiViewState *state, gboolean qr) {
   TICK_N("Background");
   widget_draw(WIDGET(state->main_window), d);
 
-  // TODO
 #ifdef XCB_IMDKIT
-  int x = widget_get_x_pos(&state->text->widget) +
-          textbox_get_cursor_x_pos(state->text);
-  int y = widget_get_y_pos(&state->text->widget) +
-          widget_get_height(&state->text->widget);
-  rofi_set_im_window_pos(x, y);
+  if (config.enable_imdkit) {
+    int x = widget_get_x_pos(&state->text->widget) +
+            textbox_get_cursor_x_pos(state->text);
+    int y = widget_get_y_pos(&state->text->widget) +
+            widget_get_height(&state->text->widget);
+    rofi_set_im_window_pos(x, y);
+  }
 #endif
 
   TICK_N("widgets");
@@ -344,30 +345,30 @@ static void xcb_rofi_view_calculate_window_position(RofiViewState *state) {
   switch (location) {
   case WL_NORTH_WEST:
     state->x = XcbState.mon.x;
-  /* FALLTHRU */
+    rofi_fallthrough;
   case WL_NORTH:
     state->y = XcbState.mon.y;
-    break;
+    rofi_fallthrough;
   case WL_NORTH_EAST:
     state->y = XcbState.mon.y;
-  /* FALLTHRU */
+    rofi_fallthrough;
   case WL_EAST:
     state->x = XcbState.mon.x + XcbState.mon.w;
     break;
   case WL_SOUTH_EAST:
     state->x = XcbState.mon.x + XcbState.mon.w;
-  /* FALLTHRU */
+    rofi_fallthrough;
   case WL_SOUTH:
     state->y = XcbState.mon.y + XcbState.mon.h;
     break;
   case WL_SOUTH_WEST:
     state->y = XcbState.mon.y + XcbState.mon.h;
-  /* FALLTHRU */
+    rofi_fallthrough;
   case WL_WEST:
     state->x = XcbState.mon.x;
     break;
   case WL_CENTER:;
-  /* FALLTHRU */
+    rofi_fallthrough;
   default:
     break;
   }
@@ -673,12 +674,12 @@ static void xcb___create_window(MenuFlags menu_flags) {
                        xcb_event_masks,      map};
 
 #ifdef XCB_IMDKIT
-  xcb_xim_set_im_callback(xcb->im, &xim_callback, NULL);
-#endif
+  if (config.enable_imdkit) {
+    xcb_xim_set_im_callback(xcb->im, &xim_callback, NULL);
 
-// Open connection to XIM server.
-#ifdef XCB_IMDKIT
-  xcb_xim_open(xcb->im, open_xim_callback, true, NULL);
+    // Open connection to XIM server.
+    xcb_xim_open(xcb->im, open_xim_callback, true, NULL);
+  }
 #endif
 
   xcb_window_t box_window = xcb_generate_id(xcb->connection);

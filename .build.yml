@@ -2,6 +2,8 @@ image: ubuntu/lts
 packages:
   - meson
   - ninja-build
+  - autoconf
+  - automake
   - build-essential
   - libpango1.0-dev
   - libstartup-notification0-dev
@@ -13,10 +15,14 @@ packages:
   - libxcb-xkb-dev
   - libxcb-xrm-dev
   - libxcb-cursor-dev
+  - libxcb-imdkit-dev
+  - libxcb-keysyms1
   - libxkbcommon-dev
   - libxkbcommon-dev
   - libxkbcommon-x11-dev
   - libgdk-pixbuf2.0-dev
+  - ninja-build
+  - pandoc
   - check
   - flex
   - bison
@@ -38,4 +44,4 @@ tasks:
   - dist: |
      ninja -C rofi/builddir dist
 artifacts:
-  - rofi/builddir/meson-dist/rofi-1.7.5-dev.tar.xz
+  - rofi/builddir/meson-dist/rofi-1.7.8-dev.tar.xz

@@ -128,6 +128,8 @@ Settings config = {
     .drun_match_fields = "name,generic,exec,categories,keywords",
     /** Only show entries in this category */
     .drun_categories = NULL,
+    /** Exclude entries in this category */
+    .drun_exclude_categories = NULL,
     /** Desktop entry show actions */
     .drun_show_actions = FALSE,
     /** Desktop format display */
@@ -178,4 +180,6 @@ Settings config = {
     .xserver_i300_workaround = FALSE,
     /** What browser to use for completion */
     .completer_mode = "filebrowser",
+    /** Whether to enable imdkit, see #2123 */
+    .enable_imdkit = TRUE,
 };

@@ -11,7 +11,6 @@ The manpages are grouped on rofi version.
 - [Themes](themes/themes.md)
 - [User scripts (wiki)](https://github.com/davatorium/rofi/wiki/User-scripts)
 
-
 ## Development version
 
 - [Rofi manpage](current/rofi.1.markdown)
@@ -20,15 +19,18 @@ The manpages are grouped on rofi version.
 - [Script](current/rofi-script.5.markdown)
 - [Debugging](current/rofi-debugging.5.markdown)
 - [Keys](current/rofi-keys.5.markdown)
+- [Actions](current/rofi-actions.5.markdown)
+- [Thumbnails](current/rofi-thumbnails.5.markdown)
 
 ## Stable
 
-- [Rofi manpage](1.7.5/rofi.1.markdown)
-- [Themes](1.7.5/rofi-theme.5.markdown)
-- [Dmenu](1.7.5/rofi-dmenu.5.markdown)
-- [Script](1.7.5/rofi-script.5.markdown)
-- [Debugging](1.7.5/rofi-debugging.5.markdown)
-- [Keys](1.7.5/rofi-keys.5.markdown)
+- [Rofi manpage](1.7.9/rofi.1.markdown)
+- [Themes](1.7.9/rofi-theme.5.markdown)
+- [Dmenu](1.7.9/rofi-dmenu.5.markdown)
+- [Script](1.7.9/rofi-script.5.markdown)
+- [Debugging](1.7.9/rofi-debugging.5.markdown)
+- [Keys](1.7.9/rofi-keys.5.markdown)
+- [Thumbnails](1.7.9/rofi-thumbnails.5.markdown)
 
 ## Guides
 

@@ -34,6 +34,7 @@
 #include <widgets/textbox.h>
 #include <widgets/widget.h>
 
+#include "helper.h"
 #include "settings.h"
 #include "theme.h"
 #include "view.h"
@@ -120,7 +121,7 @@ struct _listview {
   guint32 last_click;
   listview_mouse_activated_cb mouse_activated;
   void *mouse_activated_data;
-  
+
   listview_page_changed_cb page_callback;
 
   char *listview_name;
@@ -757,7 +758,7 @@ static WidgetTriggerActionResult listview_element_trigger_action(
     break;
   case ACCEPT_HOVERED_CUSTOM:
     custom = TRUE;
-  /* FALLTHRU */
+    rofi_fallthrough;
   case ACCEPT_HOVERED_ENTRY:
     listview_set_selected(lv, lv->last_offset + i);
     lv->mouse_activated(lv, custom, lv->mouse_activated_data);
