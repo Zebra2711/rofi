@@ -222,6 +222,7 @@ dist_man5_MANS=\
 	doc/rofi-keys.5\
 	doc/rofi-script.5\
 	doc/rofi-theme.5\
+	doc/rofi-actions.5\
 	doc/rofi-thumbnails.5
 
 EXTRA_DIST += \
