@@ -232,6 +232,7 @@ EXTRA_DIST += \
 	doc/rofi-thumbnails.5.markdown \
 	doc/rofi-debugging.5.markdown \
 	doc/rofi-script.5.markdown \
+	doc/rofi-actions.5.markdown \
 	doc/rofi-keys.5.markdown \
 	doc/rofi-dmenu.5.markdown \
 	doc/rofi-theme-selector.1.markdown \
