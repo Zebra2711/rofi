@@ -1,6 +1,6 @@
 /**
  *   MIT/X11 License
- *   Modified  (c) 2017 Quentin “Sardem FF7” Glidic
+ *   Modified  (c) 2017 Morgane Glidic, (c) 2020-2025 lbonn
  *
  *   Permission is hereby granted, free of charge, to any person obtaining
  *   a copy of this software and associated documentation files (the
