@@ -1240,12 +1240,12 @@ int main(int argc, char *argv[]) {
   // catch help request
   if (find_arg("-h") >= 0 || find_arg("-help") >= 0 ||
       find_arg("--help") >= 0) {
-    help(argc, argv, false);
+    help(argc, argv, FALSE);
     cleanup();
     return EXIT_SUCCESS;
   }
   if (find_arg("-info") >= 0 || find_arg("--info") >= 0) {
-    help(argc, argv, true);
+    help(argc, argv, TRUE);
     cleanup();
     return EXIT_SUCCESS;
   }
