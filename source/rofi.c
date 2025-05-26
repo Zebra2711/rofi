@@ -71,6 +71,11 @@
 
 #include "timings.h"
 
+#ifdef ENABLE_WAYLAND
+#include <wayland-version.h>
+
+#endif
+
 /** Location of pidfile for this instance. */
 char *pidfile = NULL;
 /** Location of Cache directory. */
@@ -372,17 +377,19 @@ static void print_backend_info() {
   printf("\n");
 }
 
-static void help(G_GNUC_UNUSED int argc, char **argv) {
+static void help(G_GNUC_UNUSED int argc, char **argv, const gboolean compact) {
   int is_term = isatty(fileno(stdout));
-  printf("%s usage:\n", argv[0]);
-  printf("\t%s [-options ...]\n\n", argv[0]);
-  printf("Command line only options:\n");
-  print_main_application_options(is_term);
-  printf("DMENU command line options:\n");
-  print_dmenu_options();
-  printf("Global options:\n");
-  print_options();
-  printf("\n");
+  if (!compact) {
+    printf("%s usage:\n", argv[0]);
+    printf("\t%s [-options ...]\n\n", argv[0]);
+    printf("Command line only options:\n");
+    print_main_application_options(is_term);
+    printf("DMENU command line options:\n");
+    print_dmenu_options();
+    printf("Global options:\n");
+    print_options();
+    printf("\n");
+  }
   print_backend_info();
 #ifdef ENABLE_XCB
   if (config.backend == DISPLAY_XCB) {
@@ -440,6 +447,13 @@ static void help(G_GNUC_UNUSED int argc, char **argv) {
          is_term ? color_reset : "");
 #else
   printf("\t• imdkit  %sdisabled%s\n", is_term ? color_red : "",
+         is_term ? color_reset : "");
+#endif
+#ifdef ENABLE_WAYLAND
+  printf("\t• wayland %s%s%s\n", is_term ? color_green : "", WAYLAND_VERSION,
+         is_term ? color_reset : "");
+#else
+  printf("\t• wayland %sdisabled%s\n", is_term ? color_red : "",
          is_term ? color_reset : "");
 #endif
   printf("\n");
@@ -1051,7 +1065,8 @@ int main(int argc, char *argv[]) {
 #ifdef ENABLE_WAYLAND
 #ifdef ENABLE_XCB
   const gchar *wl_display = g_getenv("WAYLAND_DISPLAY");
-  if (find_arg("-x11") < 0 && find_arg("-xcb") < 0 && wl_display != NULL && strlen(wl_display) > 0) {
+  if (find_arg("-x11") < 0 && find_arg("-xcb") < 0 && wl_display != NULL &&
+      strlen(wl_display) > 0) {
     proxy = wayland_proxy;
     config.backend = DISPLAY_WAYLAND;
   }
@@ -1232,7 +1247,12 @@ int main(int argc, char *argv[]) {
   // catch help request
   if (find_arg("-h") >= 0 || find_arg("-help") >= 0 ||
       find_arg("--help") >= 0) {
-    help(argc, argv);
+    help(argc, argv, false);
+    cleanup();
+    return EXIT_SUCCESS;
+  }
+  if (find_arg("-info") >= 0 || find_arg("--info") >= 0) {
+    help(argc, argv, true);
     cleanup();
     return EXIT_SUCCESS;
   }

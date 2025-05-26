@@ -138,6 +138,12 @@ Below is a list of the most important options:
 The help option shows the full list of command-line options and the current set
 values. These include dynamic (run-time generated) options.
 
+`-info`
+
+The info option shows useful information to include when reporting an issue.
+This includes compile time options, detected monitors and more. Please check
+the output for any personal information before posting online.
+
 `-version`
 
 Show the **rofi** version and exit.
@@ -430,10 +436,10 @@ The different fields are:
 
 For Wayland, the list of accepted fields is different:
 
-* **title**: window's title
-* **app-id**: Wayland Application ID or XWayland window's class
-* **class**: same as app-id
-* **all**: all of the above
+- **title**: window's title
+- **app-id**: Wayland Application ID or XWayland window's class
+- **class**: same as app-id
+- **all**: all of the above
 
 Default: *all*
 
@@ -888,7 +894,6 @@ Default: *enabled*
 (wayland) Override the compositor's keybindings, so that **rofi** can re-use them.
 
 Default: *disabled*
-
 
 `-xserver-i300-workaround`
 
