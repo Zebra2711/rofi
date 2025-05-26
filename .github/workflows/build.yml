@@ -15,7 +15,7 @@ on:
       - "**.rasi"
 
 jobs:
-  build-meson-gcc:
+  build-gcc:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -25,7 +25,7 @@ jobs:
       - uses: ./.github/actions/meson
         with:
           cc: gcc
-  build-meson-clang:
+  build-clang:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -35,7 +35,7 @@ jobs:
       - uses: ./.github/actions/meson
         with:
           cc: clang
-  build-meson-gcc-wayland:
+  build-gcc-wayland-only:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -48,7 +48,7 @@ jobs:
         with:
           cc: gcc
           xcb: disabled
-  build-meson-gcc-xcb:
+  build-gcc-xcb-only:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
