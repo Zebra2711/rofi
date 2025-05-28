@@ -25,6 +25,7 @@ jobs:
       - uses: ./.github/actions/meson
         with:
           cc: gcc
+      - uses: ./.github/actions/doxycheck
   build-clang:
     runs-on: ubuntu-latest
     steps:
