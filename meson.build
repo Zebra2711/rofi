@@ -66,15 +66,26 @@ deps = [
     dep_lm,
 ]
 
-
-xcb_enabled = get_option('xcb').enabled()
-wayland_enabled = get_option('wayland').enabled()
-assert(xcb_enabled or wayland_enabled,
-    'At least one of these options must be enabled: wayland, xcb')
-
 libgwater = subproject('libgwater')
 
-xcb = dependency('xcb', required: xcb_enabled )
+##
+# Check if atleast xcb or wayland is allowed in build configuration.
+# No point in having no backend.
+##
+xcb_allowed= get_option('xcb').allowed()
+wayland_allowed = get_option('wayland').allowed()
+assert(xcb_allowed or wayland_allowed,
+    'At least one of these options must be allowed: wayland, xcb')
+
+##
+# Check what two options should be available.
+##
+xcb = dependency('xcb', required: get_option('xcb').enabled())
+wayland_protocols = dependency('wayland-protocols', version: '>= 1.17', required: get_option('wayland').enabled())
+
+xcb_enabled = xcb.found()
+wayland_enabled = wayland_protocols.found()
+
 # XCB stuff
 if xcb_enabled
     deps += [
@@ -94,7 +105,6 @@ if xcb_enabled
     ]
 endif
 
-wayland_protocols = dependency('wayland-protocols', version: '>= 1.17', required: wayland_enabled)
 
 if wayland_enabled
     deps += [
@@ -104,6 +114,13 @@ if wayland_enabled
         libgwater.get_variable('libgwater_wayland'),
     ]
 endif
+
+##
+# If both in auto mode, but none found. Check again if atleast one exists.
+##
+
+assert(xcb_enabled or wayland_enabled,
+    'At least one of these options must be found: wayland, xcb')
 
 header_conf = configuration_data()
 if get_option('imdkit')
