@@ -155,15 +155,19 @@ Please follow the [build instructions](INSTALL.md) to build rofi.
 
 Wayland support is enabled by default, along with X11/xcb.
 
-rofi can also be built *without* XCB:
+rofi can also be built *without* X11/xcb or wayland, but atleast one backend
+should be enabled:
 
     meson build -Dxcb=disabled
+    meson build -Dwayland=disabled
 
 ### Usage
 
-**Rofi** options an configurations are compatible with this fork. It should automatically select the xcb or wayland backend depending on the environment it is run on.
+**Rofi** should automatically select the xcb or wayland backend depending on
+the environment it is run on.
 
-To force the use of the xcb backend (if enabled during build), the `-x11` option can be used:
+To force the use of the xcb backend (if enabled during build), the `-x11`
+option can be used:
 
     rofi -x11 ...
 

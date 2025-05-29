@@ -4,6 +4,10 @@ This guide explains how to install rofi using its build system and how you can
 make debug builds.
 
 Rofi uses [Meson](https://mesonbuild.com/) as build system.
+Be default rofi builds with both backends (x11 and wayland) if available on the
+system. If no backend is found, it will give an error.
+You can force the build system to disable the [wayland](#disable-wayland-support)
+or [x11](#disable-x11-support) backend.
 
 ## DEPENDENCY
 
