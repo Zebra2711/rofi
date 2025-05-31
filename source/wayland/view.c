@@ -26,6 +26,8 @@
  */
 
 /** The Rofi View log domain */
+#include "pango/pangocairo.h"
+#include "wayland.h"
 #define G_LOG_DOMAIN "View"
 
 #include <config.h>
@@ -226,11 +228,18 @@ static void wayland___create_window(MenuFlags menu_flags) {
     pango_cairo_font_map_set_resolution((PangoCairoFontMap *)font_map,
                                         (double)config.dpi);
   } else if (config.dpi == 0 || config.dpi == 1) {
-    // Should not be reached
-    g_warning("DPI auto-detect failed, the output is not known yet or does not "
-              "provide a physical size");
-    config.dpi =
-        pango_cairo_font_map_get_resolution((PangoCairoFontMap *)font_map);
+    double dpi = wayland_get_dpi_estimation();
+    if (dpi >= 0) {
+      config.dpi = dpi;
+      pango_cairo_font_map_set_resolution((PangoCairoFontMap *)font_map, dpi);
+    } else {
+      // Should not be reached
+      g_warning(
+          "DPI auto-detect failed, the output is not known yet or does not "
+          "provide a physical size");
+      config.dpi =
+          pango_cairo_font_map_get_resolution((PangoCairoFontMap *)font_map);
+    }
   } else {
     // default pango is 96.
     config.dpi =
