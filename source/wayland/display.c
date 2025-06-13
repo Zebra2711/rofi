@@ -1204,6 +1204,27 @@ static wayland_output *wayland_output_by_name(const char *name) {
 
   return NULL;
 }
+double wayland_get_dpi_estimation(void) {
+  double retv = -1.0;
+  if ( wayland == 0 ) {
+    return -1.0;
+  }
+  gsize noutputs = g_hash_table_size(wayland->outputs);
+  if ( noutputs == 1) {
+    GHashTableIter iter;
+    wayland_output *output;
+    g_hash_table_iter_init(&iter, wayland->outputs);
+    if (g_hash_table_iter_next(&iter, NULL, (gpointer *)&output)) {
+      return wayland_output_get_dpi(output, output->current.scale, height);
+    }
+  } else if (noutputs > 1 && config.monitor != NULL ) {
+    wayland_output *output = wayland_output_by_name(config.monitor);
+    if (output != NULL) {
+      return wayland_output_get_dpi(output, output->current.scale, height);
+    }
+  }
+  return retv;
+}
 
 static void wayland_output_done(void *data, struct wl_output *output) {
   wayland_output *self = data;
@@ -1694,10 +1715,10 @@ void display_set_surface_dimensions(int width, int height, int x_margin,
 
   zwlr_layer_surface_v1_set_anchor(wayland->wlr_surface, wlr_anchor);
 
-  // NOTE: Setting margin for edges we are not anchored to has no effect, so we
-  // can safely set contradictory margins (e.g. top vs bottom) - at most one of
-  // the margins on a given axis will have effect.
-  // This also means that margin has no effect if the window is centered. :(
+  // NOTE: Setting margin for edges we are not anchored to has no effect, so
+  // we can safely set contradictory margins (e.g. top vs bottom) - at most
+  // one of the margins on a given axis will have effect. This also means that
+  // margin has no effect if the window is centered. :(
   zwlr_layer_surface_v1_set_margin(wayland->wlr_surface, y_margin, -x_margin,
                                    -y_margin, x_margin);
 }
