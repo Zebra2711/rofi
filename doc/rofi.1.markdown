@@ -547,7 +547,8 @@ See `rofi -h` output for the detected monitors, their position, and size.
 
 `-theme` *filename*
 
-Path to the new theme file format. This overrides the old theme settings.
+Path to theme file, or name of an installed theme. See **rofi-theme(5)** manpage
+on how themes are resolved.
 
 `-theme-str` *string*
 

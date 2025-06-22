@@ -1657,6 +1657,8 @@ Syntax:
 @theme "mytheme"
 ```
 
+The commandline option `-theme` is handled similarly to `@theme`.
+
 The specified file can either by *name*, *filename*,*full path*.
 
 If a filename is provided, it will try to resolve it in the following order:
