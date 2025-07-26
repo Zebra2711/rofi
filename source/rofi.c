@@ -1102,6 +1102,10 @@ int main(int argc, char *argv[]) {
   bindings = nk_bindings_new(0lu);
   TICK_N("NK Bindings");
 
+  // Setup keybinding
+  setup_abe();
+  TICK_N("Setup abe");
+
   if (find_arg("-no-config") < 0) {
     // Load distro default settings
     gboolean found_system = FALSE;
@@ -1289,10 +1293,6 @@ int main(int argc, char *argv[]) {
     cleanup();
     return EXIT_FAILURE;
   }
-
-  // Setup keybinding
-  setup_abe();
-  TICK_N("Setup abe");
 
   rofi_view_workers_initialize();
   TICK_N("Workers initialize");
