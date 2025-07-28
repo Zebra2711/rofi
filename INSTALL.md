@@ -15,8 +15,6 @@ or [x11](#disable-x11-support) backend.
 
 - C compiler that supports the c99 standard. (gcc or clang)
 
-- make
-
 - meson
 
 - ninja
@@ -174,13 +172,9 @@ or to install locally:
     meson setup build --prefix ${HOME}/.local
 ```
 
-## Options for make
+### Verbose build output
 
-When you run make you can tweak the build process a little.
-
-### Verbose output
-
-Show the commands called:
+Show the commands called (when using ninja):
 
 ```bash
     # Meson
