@@ -1,11 +1,11 @@
 # 2.0.0
 
 In this release we merged back [lbonn](https://github.com/lbonn) his great wayland [port of rofi](https://github.com/lbonn/rofi) into mainline.
-So Wayland is now an officially supported backend.
+Wayland is now an officially supported backend.
 
 ## Removal of autotools build system
 
-With the merge of the wayland backend, for ease of maintenance we dropped the autotools build system. We now only
+With the merge of the wayland backend, for ease of maintenance, we dropped the autotools build system. We now only
 support the meson build system. Please see the updated
 [INSTALL](https://github.com/davatorium/rofi/blob/2.0.0/INSTALL.md)
 instructions.
@@ -68,9 +68,24 @@ Parsed files:
 
 ## Known issues
 
+### Redraw on startup
+
 With wayland, rofi only knows after the first surface is drawn what the resolution, dpi and scale is.
 Because of this, it might need to redraw/resize elements (icons/text) after displaying. This can generate a weird 'flicker' on startup.
 
+There are possible work-arounds, but those might cause weird artifacts with window managers that do animations, like hyprland.
+We are still looking into a good solution. Help is welcome.
+
+Issue: #2165
+
+### Close on click out of window
+
+It is currently not possible, in a reliable way, to detect out of window clicks.
+So under wayland this feature currently does not work.
+
+Issue: #2158
+
+For more information see the [README](https://github.com/davatorium/rofi/blob/2.0.0/README.md) file.
 
 
 
