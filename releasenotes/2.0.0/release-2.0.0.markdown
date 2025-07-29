@@ -70,26 +70,32 @@ Parsed files:
 
 ### Redraw on startup
 
-With wayland, rofi only knows after the first surface is drawn what the resolution, dpi and scale is.
-Because of this, it might need to redraw/resize elements (icons/text) after displaying. This can generate a weird 'flicker' on startup.
+With wayland, rofi only knows after the first surface is drawn, what the dpi and
+scale is. Because of this, it might need to redraw/resize elements (icons/text)
+after displaying. This can generate a weird 'flicker' on startup. It will first
+load a lower resolution version of the icons (that the window manager scales
+up), then it gets updated with the real resolution and it then loads full
+resolution icons. Because icon loading is asynchronous, they will disappear and
+re-appear.
 
-There are possible work-arounds, but those might cause weird artifacts with window managers that do animations, like hyprland.
-We are still looking into a good solution. Help is welcome.
+There are possible work-arounds, but those might cause weird artifacts with
+window managers that do animations, like hyprland. We are still looking into a
+good solution. Help is welcome.
 
-Issue: #2165
+Issue: [#2165](https://github.com/davatorium/rofi/issues/2165)
 
 ### Close on click out of window
 
 It is currently not possible, in a reliable way, to detect out of window clicks.
 So under wayland this feature currently does not work.
 
-Issue: #2158
+Issue: [#2158](https://github.com/davatorium/rofi/issues/2158)
 
 For more information see the [README](https://github.com/davatorium/rofi/blob/2.0.0/README.md) file.
-
 
 
 ## Changelog
 
 The changelog contains years of wayland patches and merges.
-There is little use to list them all here in these release notes.
+There is little use to list them all here in this releasenote.
+Please check the full git log for changes.
