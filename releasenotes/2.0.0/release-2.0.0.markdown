@@ -10,7 +10,7 @@ support the meson build system. Please see the updated
 [INSTALL](https://github.com/davatorium/rofi/blob/2.0.0/INSTALL.md)
 instructions.
 
-You can build rofi with only X11 or Wayland. It also supports or both backends enabled, where it automatically select the right backend. 
+You can build rofi with only X11 or Wayland. It also supports or both backends enabled, where it automatically select the right backend.
 [See here](https://github.com/davatorium/rofi/blob/2.0.0/INSTALL.md#options-for-building) for more information about build options.
 
 ## Dump info
@@ -93,6 +93,11 @@ Issue: [#2158](https://github.com/davatorium/rofi/issues/2158)
 
 For more information see the [README](https://github.com/davatorium/rofi/blob/2.0.0/README.md) file.
 
+### No IMDKIT support in wayland
+
+There is currently no imdkit support when using the wayland backend.
+
+Issue: [#131 orig repo](https://github.com/lbonn/rofi/issues/131)
 
 ## Changelog
 
