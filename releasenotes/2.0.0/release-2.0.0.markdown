@@ -1,4 +1,4 @@
-# 2.0.0
+# 2.0.0 - beta 1
 
 In this release we merged back [lbonn](https://github.com/lbonn) his great wayland [port of rofi](https://github.com/lbonn/rofi) into mainline.
 Wayland is now an officially supported backend.
@@ -68,6 +68,8 @@ Parsed files:
 
 ## Known issues
 
+See the [README](https://github.com/davatorium/rofi/blob/2.0.0/README.md) for the full list.
+
 ### Redraw on startup
 
 With wayland, rofi only knows after the first surface is drawn, what the dpi and
@@ -91,7 +93,6 @@ So under wayland this feature currently does not work.
 
 Issue: [#2158](https://github.com/davatorium/rofi/issues/2158)
 
-For more information see the [README](https://github.com/davatorium/rofi/blob/2.0.0/README.md) file.
 
 ### No IMDKIT support in wayland
 
