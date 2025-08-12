@@ -337,7 +337,7 @@ ActionBindingEntry rofi_bindings[] = {
      .binding = "Super+equal",
      .comment = "Switch to the previous matcher"},
     {.id = MATCHER_DOWN,
-     .name = "kb-mather-down",
+     .name = "kb-matcher-down",
      .binding = "Super+minus",
      .comment = "Switch to the next matcher"},
 
