@@ -7,21 +7,26 @@ body:
   - type: markdown
     attributes:
       value: |
-        First read the [guidelines](https://github.com/DaveDavenport/rofi/blob/next/.github/CONTRIBUTING.md)! This is not optional for any report. People must be able to understand the full context of the report when reading it, at any time.
+        First read the
+        [guidelines](https://github.com/DaveDavenport/rofi/blob/next/.github/CONTRIBUTING.md)!
+        This is not optional for any report. People must be able to understand
+        the full context of the report when reading it, at any time.
 
         If you feel like you “it is simple and requires no explanation”, please
-        consider you’re wrong and still fill the full report. Any report
-        missing required informations will be labeled as “Incomplete Report -
-        Please follow the guidelines” and will be closed. If you ask a
-        question, enter dummy information in required fields to get past the
-        checks or in general completely ignore the guidelines, the issue will
-        be closed and locked as spam.
+        consider you’re wrong and still fill the full report. What is clear to
+        you might not be clear to somebody else. Any report missing required
+        informations will be labeled as “Incomplete Report - Please follow the
+        guidelines” and will be closed. If you ask a question, enter dummy
+        information in required fields to get past the checks or in general
+        completely ignore the guidelines, the issue will be closed and locked
+        as spam. This includes filling in 'Distro X defaults', we don't know
+        and cannot keep track of what each distribution ships as a default.
 
         If you are unsure, please use the
         [discussion](https://github.com/davatorium/rofi/discussions) forum
         first. It is easy to upgrade a question to an issue in github.
 
-        If you report problems with speed in rofi, attach a [timing
+        If you report problems with speed in rofi, please attach a [timing
         trace](https://github.com/davatorium/rofi/blob/next/doc/rofi-debugging.5.markdown#timing-traces).
 
 
@@ -36,7 +41,7 @@ body:
       label: "Configuration"
       description: |
         Please use https://gist.github.com and include output of `rofi -info` and `rofi -dump-config`.
-        n/a is not a valid config.
+        Anything that is not a link to valid output, will not be accepted.
       placeholder: "Gist URL"
     validations:
       required: true
@@ -45,7 +50,7 @@ body:
       label: "Theme"
       description: |
         Please use https://gist.github.com and include output of `rofi -dump-theme`.
-        n/a is not a valid theme.
+        Anything that is not a link to valid output, will not be accepted.
       placeholder: "Gist URL"
     validations:
       required: true
