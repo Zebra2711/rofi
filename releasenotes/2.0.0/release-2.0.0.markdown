@@ -1,4 +1,4 @@
-# 2.0.0 - beta 1
+# 2.0.0
 
 In this release we merged back [lbonn](https://github.com/lbonn) his great wayland [port of rofi](https://github.com/lbonn/rofi) into mainline.
 Wayland is now an officially supported backend.
@@ -92,7 +92,6 @@ It is currently not possible, in a reliable way, to detect out of window clicks.
 So under wayland this feature currently does not work.
 
 Issue: [#2158](https://github.com/davatorium/rofi/issues/2158)
-
 
 ### No IMDKIT support in wayland
 
