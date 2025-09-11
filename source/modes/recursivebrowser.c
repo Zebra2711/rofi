@@ -25,6 +25,8 @@
  */
 #define G_LOG_DOMAIN "Modes.RecursiveBrowser"
 
+#include "glib.h"
+
 #include "config.h"
 #include <errno.h>
 #include <gio/gio.h>
@@ -181,10 +183,18 @@ static void recursive_browser_mode_init_current_dir(Mode *sw) {
 
 static void scan_dir(FileBrowserModePrivateData *pd, GFile *path) {
   GQueue *dirs_to_scan = g_queue_new();
+  GHashTable *dirs_scanned =
+      g_hash_table_new_full(g_str_hash, g_int_equal, g_free, NULL);
   g_queue_push_tail(dirs_to_scan, g_object_ref(path));
   GFile *dir_to_scan = NULL;
   while ((dir_to_scan = g_queue_pop_head(dirs_to_scan)) != NULL) {
     char *cdir = g_file_get_path(dir_to_scan);
+    // Check if we already visited this directory.
+    if (g_hash_table_lookup_extended(dirs_scanned, cdir, NULL, NULL)) {
+      g_free(cdir);
+      continue;
+    }
+    g_hash_table_insert(dirs_scanned, g_strdup(cdir), NULL);
     DIR *dir = opendir(cdir);
     g_object_unref(dir_to_scan);
     if (dir) {
@@ -279,8 +289,13 @@ static void scan_dir(FileBrowserModePrivateData *pd, GFile *path) {
                   g_free(f->name);
                   g_free(f);
                   f = NULL;
-                  GFile *dirp = g_file_new_for_path(new_full_path);
-                  g_queue_push_tail(dirs_to_scan, dirp);
+                  // resolve the symlink.
+                  char *sym = g_file_read_link(new_full_path, NULL);
+                  if (sym) {
+                    GFile *dirp = g_file_new_for_path(sym);
+                    g_queue_push_tail(dirs_to_scan, dirp);
+                    g_free(sym);
+                  }
                   g_free(new_full_path);
                   break;
                 } else if (S_ISREG(statbuf.st_mode)) {
@@ -291,8 +306,6 @@ static void scan_dir(FileBrowserModePrivateData *pd, GFile *path) {
                 g_warning("Failed to stat file: %s, %s", f->path,
                           strerror(errno));
               }
-
-              //            g_free(file);
             }
           }
           if (f != NULL) {
@@ -309,6 +322,7 @@ static void scan_dir(FileBrowserModePrivateData *pd, GFile *path) {
     }
     g_free(cdir);
   }
+  g_hash_table_destroy(dirs_scanned);
 
   g_queue_free(dirs_to_scan);
 }
@@ -353,8 +367,8 @@ static gboolean recursive_browser_async_read_proc(gint fd,
       }
     } else if (command == 'q') {
       if (pd->loading) {
-	// TODO: add enable.
-        //rofi_view_set_overlay(rofi_view_get_active(), NULL);
+        // TODO: add enable.
+        // rofi_view_set_overlay(rofi_view_get_active(), NULL);
       }
     }
   }
@@ -382,8 +396,9 @@ static int recursive_browser_mode_init(Mode *sw) {
     // Create the message passing queue to the UI thread.
     pd->async_queue = g_async_queue_new();
     pd->end_thread = FALSE;
-    pd->reading_thread = g_thread_new(
-        "dmenu-read", (GThreadFunc)recursive_browser_input_thread, pd);
+    pd->reading_thread =
+        g_thread_new("recursivebrowser-read",
+                     (GThreadFunc)recursive_browser_input_thread, pd);
     pd->loading = TRUE;
   }
   return TRUE;
