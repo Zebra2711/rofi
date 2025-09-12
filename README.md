@@ -1,9 +1,9 @@
 ## Announcement
 
-> The Wayland (layer shell) support added in this fork has now been merged in [Rofi mainline](https://github.com/davatorium/rofi).
-> We will soon archive this repository after the next release of Rofi 🎉!
+> The Wayland (layer shell) support added in this fork has now been merged in [rofi mainline](https://github.com/davatorium/rofi).
+> The first mainline rofi release is [rofi 2.0.0](https://github.com/davatorium/rofi/releases/tag/2.0.0)
 >
-> Until then, you should already fill Wayland-related issues and PR to the main Rofi project and follow its guidelines.
+> All bug reports and contributions should now go to [rofi mainline](https://github.com/davatorium/rofi).
 >
 > Thanks to all contributors and Rofi enjoyers!
 
