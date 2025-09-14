@@ -107,7 +107,7 @@ unsigned int rofi_view_get_next_position(const RofiViewState *state);
  *
  * Update the state if needed.
  */
-void rofi_view_handle_text(RofiViewState *state, char *text);
+void rofi_view_handle_text(RofiViewState *state, const char *text);
 /**
  * @param state the Menu handle
  * @param x The X coordinates of the motion
@@ -294,7 +294,7 @@ void rofi_view_set_overlay(RofiViewState *state, const char *text);
  * Overlays text over the current view. Passing NULL for text hides the overlay.
  * This message is automatically removed after X seconds.
  */
-void rofi_view_set_overlay_timeout (RofiViewState *state, const char *text);
+void rofi_view_set_overlay_timeout(RofiViewState *state, const char *text);
 
 /**
  * @param state The handle to the view.
