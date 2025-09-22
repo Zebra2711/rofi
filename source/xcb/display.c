@@ -1761,6 +1761,9 @@ static gboolean xcb_display_setup(GMainLoop *main_loop, NkBindings *bindings) {
     return FALSE;
   }
 
+  uint32_t val[] = {XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY};
+  xcb_change_window_attributes(xcb->connection, xcb_stuff_get_root_window(),
+		  XCB_CW_EVENT_MASK, val);
   // startup not.
   xcb->sndisplay =
       sn_xcb_display_new(xcb->connection, error_trap_push, error_trap_pop);
