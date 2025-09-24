@@ -77,6 +77,8 @@ typedef struct {
   gboolean keep_filter;
 
   gboolean use_hot_keys;
+
+  int switch_mode;
 } ScriptModePrivateData;
 
 /**
@@ -130,6 +132,17 @@ void dmenuscript_parse_entry_extras(G_GNUC_UNUSED Mode *sw,
  * End of shared functions.
  */
 
+static void script_switch_mode(Mode *sw, char *value) {
+  int index = mode_lookup(value);
+  ScriptModePrivateData *pd = (ScriptModePrivateData *)sw->private_data;
+
+  if (index >= 0) {
+    pd->switch_mode = index;
+  } else {
+    g_warning("Mode \"%s\" not found, please make sure it's enabled.\n", value);
+  }
+}
+
 static void parse_header_entry(Mode *sw, char *line, ssize_t length) {
   ScriptModePrivateData *pd = (ScriptModePrivateData *)sw->private_data;
   ssize_t length_key = 0; // strlen ( line );
@@ -173,6 +186,8 @@ static void parse_header_entry(Mode *sw, char *line, ssize_t length) {
         g_warning("Failed to parse: '%s'", value);
         rofi_clear_error_messages();
       }
+    } else if (strcasecmp(line, "switch-mode") == 0) {
+      script_switch_mode(sw, value);
     }
   }
 }
@@ -307,6 +322,7 @@ static int script_mode_init(Mode *sw) {
     pd->delim = '\n';
     sw->private_data = (void *)pd;
     pd->cmd_list = execute_executor(sw, NULL, &(pd->cmd_list_length), 0, NULL, NULL);
+    pd->switch_mode = -1;
   }
   return TRUE;
 }
@@ -376,6 +392,14 @@ static ModeMode script_mode_result(Mode *sw, int mretv, char **input,
     } else {
       return RELOAD_DIALOG;
     }
+  }
+
+  if (rmpd->switch_mode >= 0) {
+    retv = rmpd->switch_mode;
+    free(*input);
+    *input = NULL;
+    rmpd->switch_mode = -1;
+    return retv;
   }
 
   // If a new list was generated, use that an loop around.
