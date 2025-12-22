@@ -115,7 +115,9 @@ static char **__history_get_element_list_fields(FILE *fd,
 
     (*length)++;
   }
-  if (buffer_length > 0) {
+  // Don't use buffer_length to check, as static
+  // code analysis fails on this.
+  if (buffer != NULL) {
     g_free(buffer);
   }
   return retv;
