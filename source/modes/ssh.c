@@ -235,6 +235,7 @@ static SshEntry *read_known_hosts_file(const char *path, SshEntry *retv,
           // Add this host name to the list.
           retv = g_realloc(retv, ((*length) + 2) * sizeof(SshEntry));
           retv[(*length)].hostname = g_strdup(start);
+          retv[(*length)].aliases = NULL;
           retv[(*length)].port = port;
           retv[(*length) + 1].hostname = NULL;
           retv[(*length) + 1].port = 0;
@@ -301,6 +302,7 @@ static SshEntry *read_hosts_file(SshEntry *retv, unsigned int *length) {
                 // Add this host name to the list.
                 retv = g_realloc(retv, ((*length) + 2) * sizeof(SshEntry));
                 retv[(*length)].hostname = g_strdup(token);
+                retv[(*length)].aliases = NULL;
                 retv[(*length)].port = 0;
                 retv[(*length) + 1].hostname = NULL;
                 (*length)++;
@@ -426,7 +428,7 @@ static void parse_ssh_config_file(SSHModePrivateData *pd, const char *filename,
             continue;
           }
 
-          if ( aliases == 0  ){
+          if (aliases == 0) {
             // Add this host name to the list.
             (*retv) = g_realloc((*retv), ((*length) + 2) * sizeof(SshEntry));
             (*retv)[(*length)].hostname = g_strdup(token);
@@ -436,14 +438,15 @@ static void parse_ssh_config_file(SSHModePrivateData *pd, const char *filename,
             (*length)++;
             aliases = 1;
           } else {
-            int index = (*length)-1;
+            int index = (*length) - 1;
             int l = 0;
-            if ((*retv)[index].aliases != NULL ) {
+            if ((*retv)[index].aliases != NULL) {
               l = g_strv_length((*retv)[index].aliases);
             }
-            (*retv)[index].aliases = g_realloc((*retv)[index].aliases, (l+2)*sizeof(char*));
+            (*retv)[index].aliases =
+                g_realloc((*retv)[index].aliases, (l + 2) * sizeof(char *));
             (*retv)[index].aliases[l] = g_strdup(token);
-            (*retv)[index].aliases[l+1] = NULL;
+            (*retv)[index].aliases[l + 1] = NULL;
           }
         }
       }
@@ -632,20 +635,20 @@ static char *_get_display_value(const Mode *sw, unsigned int selected_line,
                                 G_GNUC_UNUSED GList **attr_list,
                                 int get_entry) {
   SSHModePrivateData *rmpd = (SSHModePrivateData *)mode_get_private_data(sw);
-  if ( get_entry){
+  if (get_entry) {
     GString *str = g_string_new(rmpd->hosts_list[selected_line].hostname);
 
-    if( rmpd->hosts_list[selected_line].aliases ){
+    if (rmpd->hosts_list[selected_line].aliases) {
       g_string_append(str, " (");
-      for ( int i = 0; rmpd->hosts_list[selected_line].aliases[i]; i++){
-        g_string_append_printf(str, " %s", rmpd->hosts_list[selected_line].aliases[i]);
-        if ( rmpd->hosts_list[selected_line].aliases[i+1] != NULL ) {
+      for (int i = 0; rmpd->hosts_list[selected_line].aliases[i]; i++) {
+        g_string_append_printf(str, " %s",
+                               rmpd->hosts_list[selected_line].aliases[i]);
+        if (rmpd->hosts_list[selected_line].aliases[i + 1] != NULL) {
           g_string_append(str, ",");
         }
       }
       g_string_append(str, " )");
     }
-
 
     char *cstr = str->str;
     g_string_free(str, FALSE);
@@ -668,11 +671,12 @@ static int ssh_token_match(const Mode *sw, rofi_int_matcher **tokens,
                            unsigned int index) {
   SSHModePrivateData *rmpd = (SSHModePrivateData *)mode_get_private_data(sw);
   int s = helper_token_match(tokens, rmpd->hosts_list[index].hostname);
-  for ( int i = 0; rmpd->hosts_list[index].aliases && rmpd->hosts_list[index].aliases[i]; i++){
+  for (int i = 0;
+       rmpd->hosts_list[index].aliases && rmpd->hosts_list[index].aliases[i];
+       i++) {
     s |= helper_token_match(tokens, rmpd->hosts_list[index].aliases[i]);
   }
   return s;
-
 }
 #include "mode-private.h"
 Mode ssh_mode = {.name = "ssh",
@@ -687,5 +691,5 @@ Mode ssh_mode = {.name = "ssh",
                  ._preprocess_input = NULL,
                  .private_data = NULL,
                  .free = NULL,
-		 .type = MODE_TYPE_SWITCHER };
+                 .type = MODE_TYPE_SWITCHER};
 /**@}*/
