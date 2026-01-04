@@ -1187,7 +1187,7 @@ For hyprland >= 0.53.0:
 ```
 layerrule {
     name = fix-rofi
-    match:class = rofi
+    match:namespace = rofi
     no_anim = true
  }
 
