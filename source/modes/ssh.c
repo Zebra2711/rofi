@@ -238,6 +238,7 @@ static SshEntry *read_known_hosts_file(const char *path, SshEntry *retv,
           retv[(*length)].aliases = NULL;
           retv[(*length)].port = port;
           retv[(*length) + 1].hostname = NULL;
+          retv[(*length) + 1].aliases = NULL;
           retv[(*length) + 1].port = 0;
           (*length)++;
         }
@@ -305,6 +306,7 @@ static SshEntry *read_hosts_file(SshEntry *retv, unsigned int *length) {
                 retv[(*length)].aliases = NULL;
                 retv[(*length)].port = 0;
                 retv[(*length) + 1].hostname = NULL;
+                retv[(*length) + 1].aliases = NULL;
                 (*length)++;
               }
             }
@@ -435,6 +437,7 @@ static void parse_ssh_config_file(SSHModePrivateData *pd, const char *filename,
             (*retv)[(*length)].aliases = NULL;
             (*retv)[(*length)].port = 0;
             (*retv)[(*length) + 1].hostname = NULL;
+            (*retv)[(*length) + 1].aliases = NULL;
             (*length)++;
             aliases = 1;
           } else {
