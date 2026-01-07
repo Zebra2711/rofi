@@ -137,13 +137,13 @@ static void exec_ssh(const SshEntry *entry) {
   //  It is allowed to be a bit slower.
   char *path = g_build_filename(cache_dir, SSH_CACHE_FILE, NULL);
   // TODO update.
-  if (entry->port > 0) {
-    char *store = g_strdup_printf("%s\x1F%d", entry->hostname, entry->port);
-    history_set(path, store);
-    g_free(store);
-  } else {
-    history_set(path, entry->hostname);
+  GString *str = g_string_new(entry->hostname);
+  g_string_append_printf(str, "\x1F%d", entry->port);
+  for (int x = 0; entry->aliases && entry->aliases[x]; x++) {
+    g_string_append_printf(str, "\x1F%s", entry->aliases[x]);
   }
+  history_set(path, str->str);
+  g_string_free(str, TRUE);
   g_free(path);
 }
 
@@ -424,6 +424,14 @@ static void parse_ssh_config_file(SSHModePrivateData *pd, const char *filename,
               found = 1;
               break;
             }
+            if ((*retv)[j].aliases != NULL) {
+              for (int x = 0; (*retv)[j].aliases[x] != NULL; x++) {
+                if (!g_ascii_strcasecmp(token, (*retv)[j].aliases[x])) {
+                  found = 1;
+                  break;
+                }
+              }
+            }
           }
 
           if (found) {
@@ -489,26 +497,35 @@ static SshEntry *get_ssh(SSHModePrivateData *pd, unsigned int *length) {
   retv = malloc((*length) * sizeof(SshEntry));
   for (unsigned int i = 0; i < (*length); i++) {
     int port = 0;
-    char *portstr = strchr(h[i], '\x1F');
-    if (portstr != NULL) {
-      *portstr = '\0';
+    char **ssplit = g_strsplit(h[i], "\x1F", -1);
+    guint ssplit_len = g_strv_length(ssplit);
+    if (ssplit_len > 1) {
       errno = 0;
       gchar *endptr = NULL;
-      gint64 number = g_ascii_strtoll(&(portstr[1]), &endptr, 10);
+      gint64 number = g_ascii_strtoll(ssplit[1], &endptr, 10);
       if (errno != 0) {
-        g_warning("Failed to parse port number: %s.", &(portstr[1]));
-      } else if (endptr == &(portstr[1])) {
+        g_warning("Failed to parse port number: %s.", (ssplit[1]));
+      } else if (endptr == (ssplit[1])) {
         g_warning("Failed to parse port number: %s, invalid number.",
-                  &(portstr[1]));
+                  (ssplit[1]));
       } else if (number < 0 || number > 65535) {
         g_warning("Failed to parse port number: %s, out of range.",
-                  &(portstr[1]));
+                  (ssplit[1]));
       } else {
         port = number;
       }
     }
-    retv[i].hostname = h[i];
+    retv[i].hostname = g_strdup(ssplit[0]);
     retv[i].port = port;
+    retv[i].aliases = NULL;
+    gint naliases = ssplit_len - 2;
+    if (naliases > 0) {
+      retv[i].aliases = g_malloc0(sizeof(char *) * (naliases + 1));
+      for (gint j = 0; j < naliases; j++) {
+        retv[i].aliases[j] = g_strdup(ssplit[2 + j]);
+      }
+    }
+    g_strfreev(ssplit);
   }
   g_free(h);
 
