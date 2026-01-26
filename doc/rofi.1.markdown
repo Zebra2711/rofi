@@ -263,6 +263,8 @@ Start in case-smart mode behave like vim's `smartcase`, which determines
 case-sensitivity by input.  When enabled, this will suppress `-case-sensitive`
 config.
 
+Default: disabled.
+
 `-cycle`
 
 Cycle through the result list. Default is 'true'.
