@@ -51,7 +51,6 @@
 #include "helper.h"
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
-
 /** Desktop entry specifying the thumbnailer. */
 #define THUMBNAILER_ENTRY_GROUP "Thumbnailer Entry"
 /** Extension used for the thumbnailer. */
