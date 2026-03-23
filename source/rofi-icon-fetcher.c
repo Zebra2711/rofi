@@ -72,19 +72,28 @@ typedef struct {
 } IconCacheHeader;
 
 static char *icon_cache_path(const char *icon_path, int w, int h) {
-  uint32_t hash = 5381;
-  for (const char *p = icon_path; *p; p++)
+  uint32_t hash = 5381; // djb2
+  for (const char *p = icon_path; *p; p++) {
     hash = ((hash << 5) + hash) ^ (uint8_t)*p;
+  }
   hash ^= (uint32_t)(w * 10007u ^ h * 100003u);
-  return g_strdup_printf("%s/" ICON_CACHE_DIR "/%08x.rofi", g_get_user_cache_dir(), hash);
+
+  char fname[14]; // 8 hex + ".rofi" + "\0"
+  g_snprintf(fname, 14, "%08x.rofi", hash);
+  char *path = g_build_filename(g_get_user_cache_dir(), ICON_CACHE_DIR, fname, NULL);
+  return path;
 }
 
 static cairo_surface_t *icon_cache_load(const char *cache_key, const char *src_path, int w, int h, char **resolved_path_out) {
-  if (resolved_path_out) *resolved_path_out = NULL;
+  if (resolved_path_out) {
+    *resolved_path_out = NULL;
+  }
   char *cp = icon_cache_path(cache_key, w, h);
   FILE *f = fopen(cp, "rb");
   g_free(cp);
-  if (!f) return NULL;
+  if (!f) {
+    return NULL;
+  }
 
   IconCacheHeader hdr;
   if (fread(&hdr, sizeof(hdr), 1, f) != 1
@@ -96,7 +105,11 @@ static cairo_surface_t *icon_cache_load(const char *cache_key, const char *src_p
 
   const char *stat_path = (src_path && *src_path) ? src_path
                           : (hdr.src_path[0] ? hdr.src_path : NULL);
-  if (!stat_path) { fclose(f); return NULL; }
+  if (!stat_path) {
+    fclose(f);
+    return NULL;
+  }
+
   struct stat st;
   if (stat(stat_path, &st) != 0
       || (int64_t)st.st_mtime != hdr.src_mtime
@@ -117,15 +130,18 @@ static cairo_surface_t *icon_cache_load(const char *cache_key, const char *src_p
   cairo_surface_mark_dirty(s);
   fclose(f);
   g_debug("icon cache HIT  %s [%dx%d] actual=[%dx%d]", stat_path, w, h, hdr.width, hdr.height);
-  if (resolved_path_out && hdr.src_path[0])
+  if (resolved_path_out && hdr.src_path[0]) {
     *resolved_path_out = g_strdup(hdr.src_path);
+  }
   return s;
 }
 
 static void icon_cache_save(const char *cache_key, const char *src_path, int w, int h,
                             cairo_surface_t *s) {
   struct stat st;
-  if (stat(src_path, &st) != 0) return;
+  if (stat(src_path, &st) != 0) {
+    return;
+  }
   char *cache_dir = g_build_filename(g_get_user_cache_dir(), ICON_CACHE_DIR, NULL);
   g_mkdir_with_parents(cache_dir, 0700);
   g_free(cache_dir);
@@ -133,7 +149,9 @@ static void icon_cache_save(const char *cache_key, const char *src_path, int w, 
   char *cp = icon_cache_path(cache_key, w, h);
   FILE *f = fopen(cp, "wb");
   g_free(cp);
-  if (!f) return;
+  if (!f) {
+    return;
+  }
 
   int aw = cairo_image_surface_get_width(s);
   int ah = cairo_image_surface_get_height(s);
